@@ -36,6 +36,7 @@
 #include "Hypertable/Lib/Schema.h"
 #include "Hypertable/Lib/Timestamp.h"
 #include "Hypertable/Lib/Types.h"
+#include "Hypertable/Lib/MetaLogEntityRange.h"
 
 #include "AccessGroup.h"
 #include "CellStore.h"
@@ -123,6 +124,8 @@ namespace Hypertable {
 
     void lock();
     void unlock();
+
+    MetaLog::EntityRange *metalog_entity() { return m_metalog_entity.get(); }
 
     uint64_t disk_usage();
 

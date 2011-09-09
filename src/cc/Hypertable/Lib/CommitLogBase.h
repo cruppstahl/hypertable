@@ -73,7 +73,8 @@ namespace Hypertable {
   class CommitLogBase : public ReferenceCount {
   public:
     CommitLogBase(const String &log_dir)
-      : m_log_dir(log_dir), m_latest_revision(TIMESTAMP_MIN), m_range_reference_required(true) {
+      : m_log_dir(log_dir), m_latest_revision(TIMESTAMP_MIN),
+        m_range_reference_required(true) {
 
       boost::trim_right_if(m_log_dir, boost::is_any_of("/"));
       

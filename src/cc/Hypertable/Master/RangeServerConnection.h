@@ -40,6 +40,7 @@ namespace Hypertable {
 
   namespace RangeServerConnectionFlags {
     enum {
+      INIT     = 0x00,
       BALANCED = 0x01,
       REMOVED  = 0x02
     };
@@ -58,6 +59,15 @@ namespace Hypertable {
     bool get_balanced();
     bool set_balanced(bool val=true);
     bool wait_for_connection();
+    bool is_recovering() {
+      ScopedLock lock(m_mutex);
+      return m_recovering;
+    }
+    void set_recovering(bool b) {
+      ScopedLock lock(m_mutex);
+      m_recovering = b;
+    }
+
     CommAddress get_comm_address();
 
     virtual const String name() { return "RangeServerConnection"; }
@@ -92,6 +102,7 @@ namespace Hypertable {
     InetAddr m_local_addr;
     InetAddr m_public_addr;
     bool m_connected;
+    bool m_recovering;
   };
   typedef intrusive_ptr<RangeServerConnection> RangeServerConnectionPtr;
 

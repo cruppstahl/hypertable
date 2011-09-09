@@ -554,7 +554,7 @@ void Range::relinquish() {
     switch (m_metalog_entity->state.state) {
     case (RangeState::STEADY):
       if (Global::immovable_range_set_contains(m_metalog_entity->table, m_metalog_entity->spec)) {
-        HT_WARNF("Aborting relinquish of %s becuase marked immovable.", m_name.c_str());
+        HT_WARNF("Aborting relinquish of %s because marked immovable.", m_name.c_str());
         return;
       }
       relinquish_install_log();
@@ -777,10 +777,13 @@ void Range::split() {
   RangeMaintenanceGuard::Activator activator(m_maintenance_guard);
   String old_start_row;
 
+  // do not split if the RangeServer is not yet fully initialized
+  if (Global::rsml_writer.get() == 0)
+    return;
+
   HT_ASSERT(!m_is_root);
 
   try {
-
     switch (m_metalog_entity->state.state) {
 
     case (RangeState::STEADY):
@@ -791,9 +794,7 @@ void Range::split() {
 
     case (RangeState::SPLIT_SHRUNK):
       split_notify_master();
-
     }
-
   }
   catch (Exception &e) {
     if (e.code() == Error::CANCELLED || cancel_maintenance())
@@ -1371,8 +1372,10 @@ void Range::purge_memory(MaintenanceFlag::Map &subtask_map) {
  */
 void Range::recovery_finalize() {
 
-  if (m_metalog_entity->state.state == RangeState::SPLIT_LOG_INSTALLED ||
-      m_metalog_entity->state.state == RangeState::RELINQUISH_LOG_INSTALLED) {
+  if ((m_metalog_entity->state.state & RangeState::SPLIT_LOG_INSTALLED) 
+          == RangeState::SPLIT_LOG_INSTALLED ||
+      (m_metalog_entity->state.state & RangeState::RELINQUISH_LOG_INSTALLED)
+          == RangeState::RELINQUISH_LOG_INSTALLED) {
     CommitLogReaderPtr commit_log_reader =
       new CommitLogReader(Global::dfs, m_metalog_entity->state.transfer_log);
 
@@ -1387,14 +1390,16 @@ void Range::recovery_finalize() {
     for (size_t i=0; i<m_access_group_vector.size(); i++)
       m_access_group_vector[i]->stage_compaction();
 
-    if (m_metalog_entity->state.state == RangeState::SPLIT_LOG_INSTALLED) {
+    if ((m_metalog_entity->state.state & RangeState::SPLIT_LOG_INSTALLED)
+            == RangeState::SPLIT_LOG_INSTALLED) {
       HT_INFOF("Restored range state to SPLIT_LOG_INSTALLED (split point='%s' "
-               "xfer log='%s')", m_metalog_entity->state.split_point, m_metalog_entity->state.transfer_log);
+               "xfer log='%s')", m_metalog_entity->state.split_point,
+               m_metalog_entity->state.transfer_log);
       m_split_row = m_metalog_entity->state.split_point;
     }
     else
-      HT_INFOF("Restored range state to RELINQUISH_LOG_INSTALLED (xfer log='%s')",
-               m_metalog_entity->state.transfer_log);
+      HT_INFOF("Restored range state to RELINQUISH_LOG_INSTALLED (xfer "
+               "log='%s')", m_metalog_entity->state.transfer_log);
   }
 
   for (size_t i=0; i<m_access_group_vector.size(); i++)
@@ -1573,7 +1578,6 @@ std::ostream &Hypertable::operator<<(std::ostream &os, const Range::MaintenanceD
   os << "load_acknowledged=" << (mdata.load_acknowledged ? "true" : "false") << "\n";
   return os;
 }
-
 
 /**
  * Only create log removal task if the log looks like

@@ -58,7 +58,11 @@ namespace Hypertable {
       ACKNOWLEDGE = 16,
       FINALIZE = 17,
       CREATE_INDEX = 18,
-      CREATE_QUALIFIER_INDEX = 19
+      CREATE_QUALIFIER_INDEX = 19,
+      PREPARE = 20,
+      COMMIT = 21,
+      PHANTOM_LOAD = 22,
+      REPLAY_FRAGMENTS = 23
     };
     const char *get_text(int state);
   }
@@ -69,6 +73,8 @@ namespace Hypertable {
     extern const char *ROOT;
     extern const char *METADATA;
     extern const char *SYSTEM;
+    extern const char *RECOVER_SERVER;
+    extern const char *RECOVERY_BLOCKER;
   }
 
   namespace NamespaceFlag {
@@ -195,6 +201,7 @@ namespace Hypertable {
         OLD_OPERATION_RELINQUISH_ACKNOWLEDGE = 0x00020012,
         OLD_OPERATION_BALANCE                = 0x00020013,
         OLD_OPERATION_LOAD_BALANCER          = 0x00020014,
+
         OPERATION_TEST                       = 0x00030001,
         OPERATION_STATUS                     = 0x00030002,
         OPERATION_SYSTEM_UPGRADE             = 0x00030003,
@@ -215,7 +222,9 @@ namespace Hypertable {
         OPERATION_RELINQUISH_ACKNOWLEDGE     = 0x00030012,
         OPERATION_BALANCE                    = 0x00030013,
         OPERATION_LOAD_BALANCER              = 0x00030014,
-        OPERATION_STOP                       = 0x00030015
+        OPERATION_RECOVER_SERVER_RANGES      = 0x00030015,
+        OPERATION_RECOVERY_BLOCKER           = 0x00030016,
+        OPERATION_STOP                       = 0x00030017
       };
     }
   }

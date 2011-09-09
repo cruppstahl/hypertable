@@ -119,8 +119,6 @@ LocationCache::lookup(const char * table_name, const char *rowkey,
 
   assert(table_name);
 
-  //cout << table_name << " row=" << rowkey << endl << flush;
-
   key.table_name = table_name;
   key.end_row = rowkey;
 
@@ -148,7 +146,7 @@ LocationCache::lookup(const char * table_name, const char *rowkey,
   return true;
 }
 
-bool LocationCache::invalidate(const char * table_name, const char *rowkey) {
+bool LocationCache::invalidate(const char *table_name, const char *rowkey) {
   ScopedLock lock(m_mutex);
   LocationMap::iterator iter;
   LocationCacheKey key;
@@ -166,7 +164,12 @@ bool LocationCache::invalidate(const char * table_name, const char *rowkey) {
   if (strcmp((*iter).first.table_name, table_name))
     return false;
 
-  if (strcmp(rowkey, (*iter).second->start_row.c_str()) < 0)
+#if 0
+  if (rowkey && strcmp(rowkey, (*iter).second->start_row.c_str()) < 0)
+    return false;
+#endif
+  if ((rowkey == 0 && !(*iter).second->start_row.empty()) ||
+      (rowkey && strcmp(rowkey, (*iter).second->start_row.c_str()) < 0))
     return false;
 
   remove((*iter).second);

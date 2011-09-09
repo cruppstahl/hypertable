@@ -53,7 +53,8 @@ void OperationRelinquishAcknowledge::execute() {
   HT_MAYBE_FAIL("relinquish-acknowledge-INITIAL-a");
   HT_MAYBE_FAIL("relinquish-acknowledge-INITIAL-b");
 
-  int64_t hash_code = Utility::range_hash_code(m_table, m_range, String("OperationMoveRange-") + m_source);
+  int64_t hash_code = Utility::range_hash_code(m_table, m_range,
+          String("OperationMoveRange-") + m_source);
 
   OperationPtr move_op = m_context->reference_manager->get(hash_code);
 

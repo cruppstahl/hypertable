@@ -42,43 +42,30 @@ namespace Hypertable {
 
   class LoadBalancer : public ReferenceCount {
   public:
-    virtual void balance(const String &algorithm=String()) = 0;
-    virtual void transfer_monitoring_data(vector<RangeServerStatistics> &stats)=0;
+    LoadBalancer(ContextPtr context);
 
-    LoadBalancer(ContextPtr context) : m_context(context), m_last_balance_time(min_date_time) {
-      m_balance_interval     = m_context->props->get_i32("Hypertable.LoadBalancer.Interval");
-      m_balance_window_start = duration_from_string(m_context->props->get_str(
-          "Hypertable.LoadBalancer.WindowStart"));
-      m_balance_window_end   = duration_from_string(m_context->props->get_str(
-          "Hypertable.LoadBalancer.WindowEnd"));
-      m_balance_wait = m_context->props->get_i32("Hypertable.LoadBalancer.ServerWaitInterval");
-      m_balance_loadavg_threshold = m_context->props->get_f64("Hypertable.LoadBalancer.LoadavgThreshold");
+    // starts a balance operation
+    void balance(const String &algorithm = String());
 
-    }
+    // transfers monitoring statistics from the RangeServers; invoked by
+    // OperationGatherStatistics
+    void transfer_monitoring_data(vector<RangeServerStatistics> &stats);
 
-    virtual bool has_plan_moves() {
-      ScopedLock lock(m_mutex);
-      if (!m_plan)
-        return false;
-      else
-        return (m_plan->moves.size()>0);
-    }
+  private:
+    void calculate_balance_plan(const String &algorithm,
+                    BalancePlanPtr &plan);
+    void distribute_load(const boost::posix_time::ptime &now,
+                    vector<RangeServerStatistics> &range_server_stats,
+                    BalancePlanPtr &plan);
+    void distribute_table_ranges(vector<RangeServerStatistics> &stats,
+                    BalancePlanPtr &plan);
+    void offload_servers(vector<RangeServerStatistics> &stats,
+                    set<String> &offload, BalancePlanPtr &plan);
 
-    virtual void register_plan(BalancePlanPtr &plan);
-    virtual bool get_destination(const TableIdentifier &table, const RangeSpec &range, String &location);
-    virtual bool move_complete(const TableIdentifier &table, const RangeSpec &range, int32_t error=0);
-    virtual bool wait_for_complete(RangeMoveSpecPtr &move, uint32_t timeout_millis);
+    void get_unbalanced_servers(const std::vector<RangeServerStatistics> &stats);
 
-    virtual void set_balanced();
-    virtual void get_root_location(String &location);
-    //String assign_to_server(TableIdentifier &tid, RangeIdentifier &rid) = 0;
-    //void range_move_loaded(TableIdentifier &tid, RangeIdentifier &rid) = 0;
-    //void range_relinquish_acknowledged(TableIdentifier &tid, RangeIdentifier &rid) = 0;
-    //time_t maintenance_interval() = 0;
-
-  protected:
     Mutex m_mutex;
-    boost::condition m_cond;
+    Mutex m_data_mutex;
     ContextPtr m_context;
     uint32_t m_balance_interval;
     uint32_t m_balance_wait;
@@ -87,25 +74,13 @@ namespace Hypertable {
     ptime m_last_balance_time;
     double m_balance_loadavg_threshold;
     std::vector <RangeServerConnectionPtr> m_unbalanced_servers;
-  private:
-    struct lt_move_spec {
-      bool operator()(const RangeMoveSpecPtr &ms1, const RangeMoveSpecPtr &ms2) const  {
-        if (ms1->table < ms2->table)
-          return true;
-        else if (ms1->table == ms2->table) {
-          if (ms1->range < ms2->range)
-            return true;
-        }
-        return false;
-      }
-    };
-    typedef std::set<RangeMoveSpecPtr, lt_move_spec> MoveSetT;
-
+    bool m_enabled;
+    bool m_waiting_for_servers;
+    std::vector <RangeServerStatistics> m_range_server_stats;
+    ptime m_wait_time_start;
     BalancePlanPtr m_plan;
-
-    MoveSetT m_current_set;
-    MoveSetT m_incomplete_set;
   };
+
   typedef intrusive_ptr<LoadBalancer> LoadBalancerPtr;
 
 } // namespace Hypertable

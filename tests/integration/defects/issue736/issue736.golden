@@ -1,0 +1,22 @@
+NOTICE
+Dear administrator,
+
+The RangeServer rs1 (HOSTNAME) is no longer available and is
+about to be recovered. All ranges of rs1 are moved to other machines.
+After you fixed the failing node please manually delete the file
+"run/location" in the Hypertable directory on HOSTNAME (usually
+/opt/hypertable/<version>) before restarting Hypertable on this node.
+
+Current statistics:
+
+2 server(s) total
+1 server(s) up
+1 server(s) down
+
+Recovery will only continue if at least 1 RangeServers (40%) are running.
+This setting can be overwritten with the parameter --Hypertable.Failover.Quorum.
+
+The file Hypertable.RangeServer.log on HOSTNAME has information why
+the RangeServer had to be recovered.
+
+

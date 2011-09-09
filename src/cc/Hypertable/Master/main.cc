@@ -40,16 +40,17 @@ extern "C" {
 
 #include "ConnectionHandler.h"
 #include "Context.h"
-#include "LoadBalancerBasic.h"
+#include "LoadBalancer.h"
 #include "MetaLogDefinitionMaster.h"
 #include "OperationInitialize.h"
 #include "OperationProcessor.h"
-#include "OperationRecoverServer.h"
+#include "OperationRecover.h"
 #include "OperationSystemUpgrade.h"
 #include "OperationWaitForServers.h"
 #include "OperationBalance.h"
 #include "ReferenceManager.h"
 #include "ResponseManager.h"
+#include "BalancePlanAuthority.h"
 
 using namespace Hypertable;
 using namespace Config;
@@ -125,7 +126,7 @@ int main(int argc, char **argv) {
     context->dfs = new DfsBroker::Client(context->conn_manager, context->props);
     context->mml_definition =
         new MetaLog::DefinitionMaster(context, format("%s_%u", "master", port).c_str());
-    context->monitoring = new Monitoring(properties, context->namemap);
+    context->monitoring = new Monitoring(context.get());
     context->request_timeout = (time_t)(context->props->get_i32("Hypertable.Request.Timeout") / 1000);
 
     if (get_bool("Hypertable.Master.Locations.IncludeMasterHash")) {
@@ -156,26 +157,31 @@ int main(int argc, char **argv) {
      */
     std::vector<MetaLog::EntityPtr> entities;
     std::vector<OperationPtr> operations;
+    std::map<String, OperationPtr> recovery_operations;
     MetaLog::ReaderPtr mml_reader;
     OperationPtr operation;
     RangeServerConnectionPtr rsc;
-    String log_dir = context->toplevel_dir + "/servers/master/log/" + context->mml_definition->name();
+    StringSet locations;
+    String log_dir = context->toplevel_dir + "/servers/master/log/"
+        + context->mml_definition->name();
 
-    mml_reader = new MetaLog::Reader(context->dfs, context->mml_definition, log_dir);
+    mml_reader = new MetaLog::Reader(context->dfs, context->mml_definition,
+            log_dir);
     mml_reader->get_entities(entities);
-    context->mml_writer = new MetaLog::Writer(context->dfs, context->mml_definition,
-                                              log_dir, entities);
+    context->mml_writer = new MetaLog::Writer(context->dfs,
+            context->mml_definition, log_dir, entities);
 
     context->reference_manager = new ReferenceManager();
 
     /** Response Manager */
-    ResponseManagerContext *rmctx = new ResponseManagerContext(context->mml_writer);
+    ResponseManagerContext *rmctx = 
+        new ResponseManagerContext(context->mml_writer);
     context->response_manager = new ResponseManager(rmctx);
     Thread response_manager_thread(*context->response_manager);
 
     int worker_count  = get_i32("workers");
     context->op = new OperationProcessor(context, worker_count);
-    context->balancer = new LoadBalancerBasic(context);
+    context->balancer = new LoadBalancer(context);
 
     // First do System Upgrade
     operation = new OperationSystemUpgrade(context);
@@ -184,7 +190,7 @@ int main(int argc, char **argv) {
 
     // Then reconstruct state and start execution
     context->op_balance = NULL;
-    for (size_t i=0; i<entities.size(); i++) {
+    for (size_t i = 0; i < entities.size(); i++) {
       operation = dynamic_cast<Operation *>(entities[i].get());
       if (operation) {
         if (operation->remove_explicitly())
@@ -192,18 +198,48 @@ int main(int argc, char **argv) {
         if (dynamic_cast<OperationBalance *>(operation.get())) {
           // there should be only one OPERATION_BALANCE
           HT_ASSERT(context->op_balance == NULL);
-          context->op_balance = dynamic_cast<OperationBalance *>(operation.get());
+          context->op_balance =
+              dynamic_cast<OperationBalance *>(operation.get());
+          operations.push_back(operation);
         }
-        operations.push_back(operation);
+        // master was interrupted in the middle of rangeserver failover
+        else if (dynamic_cast<OperationRecover *>(operation.get())) {
+          HT_INFO("Recovery was interrupted; continuing");
+          OperationRecover *op =
+              dynamic_cast<OperationRecover *>(operation.get());
+          recovery_operations[op->location()] = operation;
+        }
+        else
+          operations.push_back(operation);
       }
-      else {
+      else if (dynamic_cast<RangeServerConnection *>(entities[i].get())) {
         rsc = dynamic_cast<RangeServerConnection *>(entities[i].get());
+        HT_ASSERT(rsc);
         rsc->set_mml_writer(context->mml_writer);
         context->add_server(rsc);
-        HT_ASSERT(rsc);
-        operations.push_back( new OperationRecoverServer(context, rsc) );
+        locations.insert(rsc->location());
+        if (recovery_operations.find(rsc->location())
+                == recovery_operations.end())
+          recovery_operations[rsc->location()] =
+              new OperationRecover(context, rsc);
+      }
+      else {
+        BalancePlanAuthority *bpa
+            = dynamic_cast<BalancePlanAuthority *>(entities[i].get());
+        HT_ASSERT(bpa);
+        HT_INFO_OUT << "Loading BalancePlanAuthority: " << *bpa << HT_END;
+        bpa->set_mml_writer(context->mml_writer);
+        context->set_balance_plan_authority(bpa);
       }
     }
+
+    std::map<String, OperationPtr>::iterator recovery_it = recovery_operations.begin();
+    while (recovery_it != recovery_operations.end()) {
+      operations.push_back(recovery_it->second);
+      ++recovery_it;
+    }
+    recovery_operations.clear();
+
     if (operations.empty()) {
       OperationInitializePtr init_op = new OperationInitialize(context);
       if (context->namemap->exists_mapping("/sys/METADATA", 0))
@@ -214,14 +250,14 @@ int main(int argc, char **argv) {
     else {
       context->in_operation = true;
       if (context->metadata_table == 0)
-        context->metadata_table = new Table(context->props, context->conn_manager,
-                                            context->hyperspace, context->namemap,
-                                            TableIdentifier::METADATA_NAME);
+        context->metadata_table = new Table(context->props,
+                context->conn_manager, context->hyperspace, context->namemap,
+                TableIdentifier::METADATA_NAME);
 
       if (context->rs_metrics_table == 0)
-        context->rs_metrics_table = new Table(context->props, context->conn_manager,
-                                              context->hyperspace, context->namemap,
-                                              "sys/RS_METRICS");
+        context->rs_metrics_table = new Table(context->props,
+                context->conn_manager, context->hyperspace, context->namemap,
+                "sys/RS_METRICS");
     }
 
     // Add PERPETUAL operations
@@ -323,17 +359,13 @@ void obtain_master_lock(ContextPtr &context) {
     context->hyperspace->mkdirs(context->toplevel_dir + "/servers");
     context->hyperspace->mkdirs(context->toplevel_dir + "/tables");
 
-    /**
-     *  Create /hypertable/root
-     */
+    // Create /hypertable/root
     handle = context->hyperspace->open(context->toplevel_dir + "/root",
         OPEN_FLAG_READ|OPEN_FLAG_WRITE|OPEN_FLAG_CREATE);
 
     HT_INFO("Successfully Initialized.");
-
   }
   catch (Exception &e) {
     HT_FATAL_OUT << e << HT_END;
   }
-
 }

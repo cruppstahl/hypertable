@@ -19,7 +19,6 @@
  * 02110-1301, USA.
  */
 
-
 #include "Common/Compat.h"
 #include "Common/Error.h"
 #include "Common/FailureInducer.h"
@@ -36,10 +35,11 @@
 #include "Hypertable/Lib/Key.h"
 #include "Hypertable/Lib/TableScanner.h"
 
-#include "LoadBalancerBasic.h"
+#include "LoadBalancer.h"
 #include "OperationBalance.h"
 #include "OperationProcessor.h"
 #include "Utility.h"
+#include "BalancePlanAuthority.h"
 
 using namespace Hypertable;
 using namespace Hyperspace;
@@ -85,12 +85,11 @@ void OperationBalance::initialize_dependencies() {
 }
 
 
-
 void OperationBalance::execute() {
   HT_ON_SCOPE_EXIT(&do_block, this);
 
   int32_t state = get_state();
-  bool registered=false;
+  bool registered = false;
 
   HT_INFOF("Entering Balance-%lld state=%s",
            (Lld)header.id, OperationState::get_text(state));
@@ -98,12 +97,11 @@ void OperationBalance::execute() {
   switch (state) {
 
   case OperationState::INITIAL:
-
     if (m_plan->moves.empty())
       return;
 
     try {
-      m_context->balancer->register_plan(m_plan);
+      m_context->get_balance_plan_authority()->register_balance_plan(m_plan);
       registered = true;
     }
     catch (Exception &e) {
@@ -117,7 +115,7 @@ void OperationBalance::execute() {
     {
       try {
         if (!registered)
-          m_context->balancer->register_plan(m_plan);
+          m_context->get_balance_plan_authority()->register_balance_plan(m_plan);
       }
       catch (Exception &e) {
         HT_ERROR_OUT << e << HT_END;
@@ -139,7 +137,8 @@ void OperationBalance::execute() {
           catch (Exception &e) {
             move->complete = true;
             move->error = e.code();
-            m_context->balancer->move_complete(move->table, move->range, move->error);
+            m_context->get_balance_plan_authority()->balance_move_complete(move->table,
+                    move->range, move->error);
           }
         }
         foreach_ht (RangeMoveSpecPtr &move, m_plan->moves)
@@ -155,7 +154,6 @@ void OperationBalance::execute() {
   HT_INFOF("Leaving Balance-%lld", (Lld)header.id);
 
 }
-
 
 void OperationBalance::display_state(std::ostream &os) {
   os << *(m_plan.get());

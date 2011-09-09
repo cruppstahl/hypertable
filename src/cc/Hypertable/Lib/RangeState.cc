@@ -60,7 +60,6 @@ void RangeState::decode(const uint8_t **bufp, size_t *remainp) {
     transfer_log = decode_vstr(bufp, remainp);
     split_point = decode_vstr(bufp, remainp);
     old_boundary_row = decode_vstr(bufp, remainp));
-
 }
 
 void RangeStateManaged::clear() {
@@ -81,6 +80,7 @@ std::ostream& Hypertable::operator<<(std::ostream &out, const RangeState &st) {
   case RangeState::STEADY: out <<"STEADY";              break;
   case RangeState::SPLIT_LOG_INSTALLED: out <<"SLI";    break;
   case RangeState::SPLIT_SHRUNK: out <<"SHRUNK";        break;
+  case RangeState::PHANTOM: out <<"PHANTOM";            break;
   default:
     out <<"unknown ("<< st.state;
   }

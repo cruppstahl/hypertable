@@ -31,7 +31,18 @@ namespace Hypertable {
    */
   class RangeState {
   public:
-    enum StateType { STEADY, SPLIT_LOG_INSTALLED, SPLIT_SHRUNK, RELINQUISH_LOG_INSTALLED };
+    //
+    // !!
+    // this enum is a mixture of an enumeration and a bitfield; the last bit
+    // is always reserved for the PHANTOM flag!
+    //
+    enum StateType {
+      STEADY,
+      SPLIT_LOG_INSTALLED,
+      SPLIT_SHRUNK,
+      RELINQUISH_LOG_INSTALLED,
+      PHANTOM =  0x8
+      };
     RangeState() : state(STEADY), timestamp(0), soft_limit(0), transfer_log(0),
                    split_point(0), old_boundary_row(0) { }
     virtual ~RangeState() {}
@@ -42,7 +53,7 @@ namespace Hypertable {
     void encode(uint8_t **bufp) const;
     virtual void decode(const uint8_t **bufp, size_t *remainp);
 
-    int state;
+    uint8_t state;
     int64_t timestamp;
     uint64_t soft_limit;
     const char *transfer_log;

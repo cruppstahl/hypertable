@@ -18,22 +18,23 @@
 #
 
 set(Master_SRCS
+BalanceLoad.cc
+BalanceOffload.cc
+BalanceRanges.cc
+BalancePlanAuthority.cc
 ConnectionHandler.cc
 Context.cc
 GcWorker.cc
 DispatchHandlerOperation.cc
 DispatchHandlerOperationGetStatistics.cc
 LoadBalancer.cc
-LoadBalancerBasic.cc
-LoadBalancerBasicDistributeTableRanges.cc
-LoadBalancerBasicDistributeLoad.cc
-LoadBalancerBasicOffloadServers.cc
 MetaLogDefinitionMaster.cc
 Monitoring.cc
 Operation.cc
 OperationAlterTable.cc
 OperationBalance.cc
 OperationCollectGarbage.cc
+OperationRecoveryBlocker.cc
 OperationCreateNamespace.cc
 OperationCreateTable.cc
 OperationDropNamespace.cc
@@ -42,7 +43,8 @@ OperationGatherStatistics.cc
 OperationInitialize.cc
 OperationMoveRange.cc
 OperationProcessor.cc
-OperationRecoverServer.cc
+OperationRecover.cc
+OperationRecoverRanges.cc
 OperationRegisterServer.cc
 OperationRelinquishAcknowledge.cc
 OperationRenameTable.cc
@@ -66,15 +68,15 @@ target_link_libraries(HyperMaster m Hyperspace HyperDfsBroker Hypertable ${RRD_L
 
 # Hypertable.Master
 add_executable(Hypertable.Master main.cc)
-target_link_libraries(Hypertable.Master HyperMaster Hyperspace Hypertable HyperDfsBroker ${MALLOC_LIBRARY})
+target_link_libraries(Hypertable.Master HyperMaster Hyperspace Hypertable HyperRanger HyperDfsBroker ${MALLOC_LIBRARY})
 
 # op_test_driver
 add_executable(op_test_driver tests/op_test_driver.cc)
-target_link_libraries(op_test_driver HyperMaster Hyperspace Hypertable HyperDfsBroker ${MALLOC_LIBRARY})
+target_link_libraries(op_test_driver HyperMaster HyperRanger Hyperspace Hypertable HyperDfsBroker ${MALLOC_LIBRARY})
 
 # op_dependency_test
 add_executable(op_dependency_test tests/op_dependency_test.cc tests/OperationTest.cc)
-target_link_libraries(op_dependency_test HyperMaster Hyperspace Hypertable HyperDfsBroker ${MALLOC_LIBRARY})
+target_link_libraries(op_dependency_test HyperMaster HyperRanger Hyperspace Hypertable HyperDfsBroker ${MALLOC_LIBRARY})
 
 #
 # Copy test files
@@ -85,9 +87,13 @@ set(DST_DIR "${HYPERTABLE_BINARY_DIR}/src/cc/Hypertable/Master")
 add_executable(htgc htgc.cc GcWorker.cc)
 target_link_libraries(htgc HyperDfsBroker Hypertable ${RRD_LIBRARIES})
 
+set(SRC_DIR "${HYPERTABLE_SOURCE_DIR}/src/cc/Hypertable/Master/tests")
+configure_file(${SRC_DIR}/balance_plan_authority_test.golden
+    ${DST_DIR}/balance_plan_authority_test.golden COPYONLY)
+
 add_test(MasterOperation-TestSetup env INSTALL_DIR=${INSTALL_DIR} 
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/op_test_setup.sh)
-add_test(MasterOperation-Proccessor op_dependency_test)
+add_test(MasterOperation-Processor op_dependency_test)
 add_test(MasterOperation-Initialize op_test_driver initialize)
 add_test(MasterOperation-SystemUpgrade op_test_driver system_upgrade)
 add_test(MasterOperation-CreateNamespace op_test_driver create_namespace)
@@ -97,10 +103,10 @@ add_test(MasterOperation-CreateTableWithIndex op_test_driver
     create_table_with_index)
 add_test(MasterOperation-RenameTable op_test_driver rename_table)
 add_test(MasterOperation-MoveRange op_test_driver move_range)
-
+add_test(MasterOperation-BalancePlanAuthority op_test_driver balance_plan_authority)
 
 if (NOT HT_COMPONENT_INSTALL)
-  install(TARGETS HyperMaster Hypertable.Master htgc op_test_driver op_dependency_test
+    install(TARGETS HyperMaster Hypertable.Master htgc op_test_driver op_dependency_test
           RUNTIME DESTINATION bin
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib)

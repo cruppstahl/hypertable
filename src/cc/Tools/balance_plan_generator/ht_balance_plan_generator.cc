@@ -39,7 +39,7 @@ extern "C" {
 #include "Hypertable/Lib/Config.h"
 #include "Hypertable/Lib/Client.h"
 #include "Hypertable/Lib/BalancePlan.h"
-#include "Hypertable/Master/LoadBalancerBasicDistributeLoad.h"
+#include "Hypertable/Master/BalanceLoad.h"
 
 using namespace Hypertable;
 using namespace Hypertable::Config;
@@ -168,8 +168,7 @@ void generate_balance_plan(PropertiesPtr &props, const String &load_balancer,
   // TODO fill this vector; otherwise disk usage is not taken into account
 
   double loadavg_threshold = get_f64("Hypertable.LoadBalancer.LoadavgThreshold");
-  LoadBalancerBasicDistributeLoad balancer(loadavg_threshold, 
-          range_server_stats, context);
+  BalanceLoad balancer(loadavg_threshold, range_server_stats, context);
   balancer.compute_plan(plan);
 }
 

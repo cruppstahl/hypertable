@@ -31,7 +31,11 @@
 #include "OperationInitialize.h"
 #include "OperationMoveRange.h"
 #include "OperationRenameTable.h"
+#include "OperationRecover.h"
+#include "OperationRecoverRanges.h"
+#include "OperationRecoveryBlocker.h"
 #include "RangeServerConnection.h"
+#include "BalancePlanAuthority.h"
 
 using namespace Hypertable;
 using namespace Hypertable::MetaLog;
@@ -107,10 +111,12 @@ Entity *DefinitionMaster::create(uint16_t log_version, const EntityHeader &heade
       operation = new OperationBalance(m_context, header);
       operation->set_original_type(EntityType::OLD_OPERATION_BALANCE);
     }
-
+  }
+  else if (header.type == EntityType::BALANCE_PLAN_AUTHORITY) {
+    MetaLog::WriterPtr mml_writer = m_context ? m_context->mml_writer : 0;
+    return new BalancePlanAuthority(m_context.get(), mml_writer, header);
   }
   else {
-
     if (header.type == EntityType::OPERATION_INITIALIZE)
       operation = new OperationInitialize(m_context, header);
     else if (header.type == EntityType::OPERATION_ALTER_TABLE)
@@ -129,7 +135,10 @@ Entity *DefinitionMaster::create(uint16_t log_version, const EntityHeader &heade
       operation = new OperationMoveRange(m_context, header);
     else if (header.type == EntityType::OPERATION_BALANCE)
       operation = new OperationBalance(m_context, header);
-
+    else if (header.type == EntityType::OPERATION_RECOVER_SERVER)
+      operation = new OperationRecover(m_context, header);
+    else if (header.type == EntityType::OPERATION_RECOVER_SERVER_RANGES)
+      operation = new OperationRecoverRanges(m_context, header);
   }
 
   if (operation)
@@ -138,6 +147,5 @@ Entity *DefinitionMaster::create(uint16_t log_version, const EntityHeader &heade
   HT_THROWF(Error::METALOG_ENTRY_BAD_TYPE,
             "Unrecognized type (%d) encountered in mml",
             (int)header.type);
-
 }
 

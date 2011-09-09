@@ -64,22 +64,33 @@ namespace {
   };
 }
 
-
 CommitLogReader::CommitLogReader(FilesystemPtr &fs, const String &log_dir)
   : CommitLogBase(log_dir), m_fs(fs), m_fragment_queue_offset(0),
-    m_block_buffer(256), m_revision(TIMESTAMP_MIN), m_compressor(0) {
-
+    m_block_buffer(256), m_revision(TIMESTAMP_MIN), m_compressor(0),
+    m_current_fragment_id(0) {
   if (get_bool("Hypertable.CommitLog.SkipErrors"))
     CommitLogBlockStream::ms_assert_on_error = false;
 
   load_fragments(m_log_dir, 0);
+  populate_init_fragments();
   reset();
 }
 
+CommitLogReader::CommitLogReader(FilesystemPtr &fs, const String &log_dir,
+        const std::vector<uint32_t> &fragment_filter)
+  : CommitLogBase(log_dir), m_fs(fs), m_fragment_queue_offset(0),
+    m_block_buffer(256), m_revision(TIMESTAMP_MIN), m_compressor(0),
+    m_current_fragment_id(0) {
+  if (get_bool("Hypertable.CommitLog.SkipErrors"))
+    CommitLogBlockStream::ms_assert_on_error = false;
 
-CommitLogReader::~CommitLogReader() {
+  foreach(uint32_t fragment, fragment_filter)
+    m_fragment_filter.insert(fragment);
+
+  load_fragments(log_dir, 0);
+  populate_init_fragments();
+  reset();
 }
-
 
 bool
 CommitLogReader::next_raw_block(CommitLogBlockInfo *infop,
@@ -100,9 +111,10 @@ CommitLogReader::next_raw_block(CommitLogBlockInfo *infop,
     CommitLogFileInfo *info = *fragment_queue_iter;
     delete info->block_stream;
     info->block_stream = 0;
+
     if (m_revision == TIMESTAMP_MIN) {
-      HT_WARNF("Skipping log fragment '%s/%u' because unable to read any valid blocks",
-               info->log_dir.c_str(), info->num);
+      HT_WARNF("Skipping log fragment '%s/%u' because unable to read any "
+             " valid blocks", info->log_dir.c_str(), info->num);
       m_fragment_queue.erase(fragment_queue_iter);
     }
     else {
@@ -132,6 +144,11 @@ CommitLogReader::next_raw_block(CommitLogBlockInfo *infop,
   return true;
 }
 
+void CommitLogReader::get_init_fragment_ids(vector<uint32_t> &ids) {
+  foreach(uint32_t id, m_init_fragments) {
+    ids.push_back(id);
+  }
+}
 
 bool
 CommitLogReader::next(const uint8_t **blockp, size_t *lenp,
@@ -192,6 +209,12 @@ void CommitLogReader::load_fragments(String log_dir, CommitLogFileInfo *parent) 
   CommitLogFileInfo *fi;
   int mark = -1;
 
+#if 0
+  HT_DEBUG_OUT << "Reading fragments in " << log_dir 
+      << " which is part of CommitLog " << m_log_dir 
+      << " mark_for_deletion=" << mark_for_deletion 
+      << " m_fragment_filter.size()=" << m_fragment_filter.size() << HT_END;
+#endif
   try {
     m_fs->readdir(log_dir, listing);
   }
@@ -209,8 +232,7 @@ void CommitLogReader::load_fragments(String log_dir, CommitLogFileInfo *parent) 
 
   sort(listing.begin(), listing.end(), ByFragmentNumber());
 
-  for (size_t i=0; i<listing.size(); i++) {
-
+  for (size_t i = 0; i < listing.size(); i++) {
     if (boost::ends_with(listing[i], ".tmp"))
       continue;
 
@@ -221,6 +243,16 @@ void CommitLogReader::load_fragments(String log_dir, CommitLogFileInfo *parent) 
 
     char *endptr;
     long num = strtol(listing[i].c_str(), &endptr, 10);
+    if (m_fragment_filter.size() && log_dir == m_log_dir &&
+      m_fragment_filter.find(num) == m_fragment_filter.end()) {
+      //HT_DEBUG_OUT << "Fragments " << num <<" in " << log_dir
+      //    << " is part of CommitLog "
+      //    << m_log_dir << " is not in fragment filter of size()="
+      //    << m_fragment_filter.size() << " num_listings=" << listing.size()
+      //    << " added_fragments=" << added_fragments << HT_END;
+      continue;
+    }
+
     if (*endptr != 0) {
       HT_WARNF("Invalid file '%s' found in commit log directory '%s'",
                listing[i].c_str(), log_dir.c_str());
@@ -262,7 +294,6 @@ void CommitLogReader::load_fragments(String log_dir, CommitLogFileInfo *parent) 
 
 }
 
-
 void CommitLogReader::load_compressor(uint16_t ztype) {
   BlockCompressionCodecPtr compressor_ptr;
 
@@ -283,4 +314,24 @@ void CommitLogReader::load_compressor(uint16_t ztype) {
 
   m_compressor_type = ztype;
   m_compressor = compressor_ptr.get();
+}
+
+void CommitLogReader::populate_init_fragments() {
+  foreach(const CommitLogFileInfo *fragment, m_fragment_queue) {
+    m_init_fragments.push_back(fragment->num);
+  }
+  foreach(const CommitLogFileInfo *fragment, m_fragment_queue) {
+    if (fragment->log_dir == m_log_dir) {
+      m_current_fragment_id = fragment->num;
+      break;
+    }
+  }
+
+#if 0
+  String msg = (String)"For commit log " + m_log_dir + "current_fragment is "
+      + m_current_fragment_id + " set of fragments is ";
+  foreach(uint32_t &fragment, m_init_fragments)
+    msg = msg + " " + fragment;
+  HT_DEBUG_OUT << msg << HT_END;
+#endif
 }

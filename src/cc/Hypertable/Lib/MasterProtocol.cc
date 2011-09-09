@@ -29,6 +29,7 @@
 
 namespace Hypertable {
   using namespace Serialization;
+  using namespace std;
 
   CommBuf *
   MasterProtocol::create_create_namespace_request(const String &name, int flags) {
@@ -181,6 +182,39 @@ namespace Hypertable {
     return cbuf;
   }
 
+  CommBuf *MasterProtocol::create_replay_complete_request(int64_t op_id,
+          uint32_t attempt, const map<uint32_t, int> &error_map,
+          bool success) {
+    CommHeader header(COMMAND_REPLAY_COMPLETE);
+    size_t len = 8 + 4 + 4 + error_map.size() * 8 + 1;
+
+    map<uint32_t, int>::const_iterator it = error_map.begin();
+
+    CommBuf *cbuf = new CommBuf(header, len);
+    cbuf->append_i64(op_id);
+    cbuf->append_i32(attempt);
+    cbuf->append_i32(error_map.size());
+    while (it != error_map.end()) {
+      cbuf->append_i32(it->first);
+      cbuf->append_i32(it->second);
+      ++it;
+    }
+    cbuf->append_bool(success);
+    return cbuf;
+  }
+
+  CommBuf *MasterProtocol::create_phantom_prepare_complete_request(int64_t op_id,
+      uint32_t attempt, const map<QualifiedRangeSpec, int> &error_map) {
+    return create_phantom_reply(COMMAND_PHANTOM_PREPARE_COMPLETE, op_id, 
+            attempt, error_map);
+  }
+
+  CommBuf *MasterProtocol::create_phantom_commit_complete_request(int64_t op_id,
+      uint32_t attempt, const map<QualifiedRangeSpec, int> &error_map) {
+    return create_phantom_reply(COMMAND_PHANTOM_COMMIT_COMPLETE, op_id, 
+            attempt, error_map);
+  }
+
   const char *MasterProtocol::m_command_strings[] = {
     "create table",
     "get schema",
@@ -197,6 +231,9 @@ namespace Hypertable {
     "relinquish acknowledge",
     "fetch result",
     "balance",
+    "replay complete",
+    "phantom prepare complete",
+    "phantom commit complete",
     "stop"
   };
 
@@ -206,5 +243,31 @@ namespace Hypertable {
     return m_command_strings[command];
   }
 
+  CommBuf *MasterProtocol::create_phantom_reply(int64_t command_id,
+          int64_t op_id, uint32_t attempt, 
+          const map<QualifiedRangeSpec, int> &error_map) {
+    CommHeader header(command_id);
+    size_t len = Serialization::encoded_length_vi64(op_id) +
+        Serialization::encoded_length_vi32(attempt) +
+        Serialization::encoded_length_vi32(error_map.size());
+
+    map<QualifiedRangeSpec, int>::const_iterator it = error_map.begin();
+    while(it != error_map.end()) {
+      len += it->first.encoded_length() 
+          + Serialization::encoded_length_vi32(it->second);
+      ++it;
+    }
+    CommBuf *cbuf = new CommBuf(header, len);
+    Serialization::encode_vi64(cbuf->get_data_ptr_address(), op_id);
+    Serialization::encode_vi32(cbuf->get_data_ptr_address(), attempt);
+    Serialization::encode_vi32(cbuf->get_data_ptr_address(), error_map.size());
+    it = error_map.begin();
+    while(it != error_map.end()) {
+      it->first.encode(cbuf->get_data_ptr_address());
+      Serialization::encode_vi32(cbuf->get_data_ptr_address(), it->second);
+      ++it;
+    }
+    return cbuf;
+  }
 }
 

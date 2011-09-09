@@ -237,6 +237,8 @@ namespace Hypertable {
       return m_namespace;
     }
 
+    RangeLocatorPtr get_range_locator() { return m_range_locator; }
+
   private:
     void initialize();
 

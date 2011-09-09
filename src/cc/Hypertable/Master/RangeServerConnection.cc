@@ -33,9 +33,10 @@ RangeServerConnection::RangeServerConnection(MetaLog::WriterPtr &mml_writer,
                                              const String &location,
                                              const String &hostname, InetAddr public_addr,
                                              bool balanced)
-  : MetaLog::Entity(MetaLog::EntityType::RANGE_SERVER_CONNECTION), m_mml_writer(mml_writer),
-    m_location(location), m_hostname(hostname), m_state(0), m_removal_time(0),
-    m_public_addr(public_addr), m_connected(false) {
+  : MetaLog::Entity(MetaLog::EntityType::RANGE_SERVER_CONNECTION), 
+    m_mml_writer(mml_writer), m_location(location), m_hostname(hostname), 
+    m_state(RangeServerConnectionFlags::INIT), m_removal_time(0), 
+    m_public_addr(public_addr), m_connected(false), m_recovering(false) {
   if (balanced)
     m_state |= RangeServerConnectionFlags::BALANCED;
   m_comm_addr.set_proxy(m_location);
@@ -91,6 +92,8 @@ bool RangeServerConnection::get_removed() {
 
 void RangeServerConnection::set_removed() {
   ScopedLock lock(m_mutex);
+  if (m_state & RangeServerConnectionFlags::REMOVED)
+    return;
   m_connected = false;
   m_state |= RangeServerConnectionFlags::REMOVED;
   m_removal_time = time(0);

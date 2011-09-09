@@ -152,6 +152,7 @@ while [ -s errors.txt ] && [ $iteration -lt 5 ]; do
   $HT_HOME/bin/ht metalog_dump /hypertable/servers/rs2/log/rsml | fgrep "load_acknowledged=false" >> errors.txt
   let iteration=iteration+1
 done
+
 #ls core* >> errors.txt
 
 if [ -s errors.txt ] ; then

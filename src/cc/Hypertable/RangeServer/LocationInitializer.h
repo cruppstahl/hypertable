@@ -28,7 +28,7 @@
 #include "Hypertable/Lib/RangeServerProtocol.h"
 
 #include "AsyncComm/ConnectionInitializer.h"
-
+#include "Hyperspace/Session.h"
 #include <boost/thread/condition.hpp>
 
 namespace Hypertable {
@@ -37,6 +37,7 @@ namespace Hypertable {
 
   public:
     LocationInitializer(PropertiesPtr &props);
+    virtual bool is_removed(const String &path, Hyperspace::SessionPtr &hyperspace);
     virtual CommBuf *create_initialization_request();
     virtual bool process_initialization_response(Event *event);
     virtual uint64_t initialization_command() { return RangeServerProtocol::COMMAND_INITIALIZE; }

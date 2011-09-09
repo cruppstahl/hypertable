@@ -43,7 +43,7 @@
 #include "OperationGatherStatistics.h"
 #include "OperationProcessor.h"
 #include "OperationMoveRange.h"
-#include "OperationRecoverServer.h"
+#include "OperationRecover.h"
 #include "OperationRegisterServer.h"
 #include "OperationRelinquishAcknowledge.h"
 #include "OperationRenameTable.h"
@@ -117,8 +117,9 @@ void ConnectionHandler::handle(EventPtr &event) {
         return;
       case MasterProtocol::COMMAND_MOVE_RANGE:
         operation = new OperationMoveRange(m_context, event);
-	if (!m_context->reference_manager->add(operation)) {
-          HT_INFOF("Skipping %s because already in progress", operation->label().c_str());
+        if (!m_context->reference_manager->add(operation)) {
+          HT_INFOF("Skipping %s because already in progress",
+                  operation->label().c_str());
           send_error_response(event, Error::MASTER_OPERATION_IN_PROGRESS, "");
           return;
         }
@@ -153,7 +154,18 @@ void ConnectionHandler::handle(EventPtr &event) {
       case MasterProtocol::COMMAND_FETCH_RESULT:
         m_context->response_manager->add_delivery_info(event);
         return;
-
+      case MasterProtocol::COMMAND_REPLAY_COMPLETE:
+        m_context->replay_complete(event);
+        send_ok_response(event);
+        return;
+      case MasterProtocol::COMMAND_PHANTOM_PREPARE_COMPLETE:
+        m_context->prepare_complete(event);
+        send_ok_response(event);
+        return;
+      case MasterProtocol::COMMAND_PHANTOM_COMMIT_COMPLETE:
+        m_context->commit_complete(event);
+        send_ok_response(event);
+        return;
       default:
         HT_THROWF(PROTOCOL_ERROR, "Unimplemented command (%llu)",
                   (Llu)event->header.command);
@@ -161,8 +173,8 @@ void ConnectionHandler::handle(EventPtr &event) {
       if (operation) {
         HT_INFOF("About to load %u", (unsigned)event->header.command);
         HT_MAYBE_FAIL_X("connection-handler-before-id-response",
-                        event->header.command != MasterProtocol::COMMAND_STATUS &&
-                        event->header.command != MasterProtocol::COMMAND_RELINQUISH_ACKNOWLEDGE);
+                event->header.command != MasterProtocol::COMMAND_STATUS &&
+                event->header.command != MasterProtocol::COMMAND_RELINQUISH_ACKNOWLEDGE);
         if (send_id_response(event, operation) != Error::OK)
           return;
         m_context->op->add_operation(operation);
@@ -170,7 +182,8 @@ void ConnectionHandler::handle(EventPtr &event) {
       else {
         ResponseCallback cb(m_context->comm, event);
         cb.error(Error::PROTOCOL_ERROR,
-                 format("Unimplemented command (%llu)", (Llu)event->header.command));
+                format("Unimplemented command (%llu)",
+                    (Llu)event->header.command));
       }
     }
     catch (Exception &e) {
@@ -183,16 +196,6 @@ void ConnectionHandler::handle(EventPtr &event) {
         m_context->response_manager->add_operation(operation);
       }
     }
-  }
-  else if (event->type == Event::DISCONNECT) {
-    RangeServerConnectionPtr rsc;
-    if (m_context->find_server_by_local_addr(event->addr, rsc)) {
-      if (m_context->disconnect_server(rsc)) {
-        OperationPtr operation = new OperationRecoverServer(m_context, rsc);
-        m_context->op->add_operation(operation);
-      }
-    }
-    HT_INFOF("%s", event->to_str().c_str());
   }
   else if (event->type == Hypertable::Event::TIMER) {
     OperationPtr operation;
@@ -245,6 +248,17 @@ int32_t ConnectionHandler::send_id_response(EventPtr &event, OperationPtr &opera
   return error;
 }
 
+int32_t ConnectionHandler::send_ok_response(EventPtr &event) {
+  CommHeader header;
+  header.initialize_from_request_header(event->header);
+  CommBufPtr cbp(new CommBuf(header, 4));
+  cbp->append_i32(Error::OK);
+  int ret = m_context->comm->send_response(event->addr, cbp);
+  if (ret != Error::OK)
+    HT_ERRORF("Problem sending error response back to %s - %s",
+              event->addr.format().c_str(), Error::get_text(ret));
+  return ret;
+}
 
 int32_t ConnectionHandler::send_error_response(EventPtr &event, int32_t error, const String &msg) {
   CommHeader header;
