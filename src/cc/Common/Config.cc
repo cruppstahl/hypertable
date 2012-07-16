@@ -179,13 +179,17 @@ void DefaultPolicy::init_options() {
     ("Hypertable.MetaLog.SkipErrors", boo()->default_value(false), "Skipping "
         "errors instead of throwing exceptions on metalog errors")
     ("Hypertable.Network.Interface", str(),
-     "Use this interface for network communication")
-    ("CephBroker.Port", i16(),
-     "Port number on which to listen (read by CephBroker only)")
+        "Use this interface for network communication")
+    ("CephBroker.Port", i16()->default_value(38030),
+        "Port number on which to listen (read by CephBroker only)")
     ("CephBroker.Workers", i32()->default_value(20),
-     "Number of Ceph broker worker threads created, maybe")
+        "Number of Ceph broker worker threads created, maybe")
     ("CephBroker.MonAddr", str(),
-     "Ceph monitor address to connect to")
+        "Ceph monitor address to connect to")
+    ("CephBroker.Id", str()->default_value("cb1"),
+        "Id for this Ceph broker")
+    ("CephBroker.RootDir", str()->default_value("/"),
+        "Root directory for this Ceph broker")
     ("HdfsBroker.Port", i16(),
         "Port number on which to listen (read by HdfsBroker only)")
     ("HdfsBroker.Hadoop.ConfDir", str(), "Hadoop configuration directory "

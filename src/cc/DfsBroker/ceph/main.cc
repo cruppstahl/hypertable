@@ -58,7 +58,7 @@ struct AppPolicy : Config::Policy {
     alias("port", "CephBroker.Port");
 
     if (has("ceph-version")) {
-      cout <<"  Ceph: "<< ceph_version(NULL, NULL, NULL) << endl;
+      cout << "  Ceph: Can't determine version " << endl;
       _exit(0);
     }
   }
@@ -67,7 +67,6 @@ struct AppPolicy : Config::Policy {
 typedef Meta::list<AppPolicy, DfsBrokerPolicy, DefaultCommPolicy> Policies;
 
 int main (int argc, char **argv) {
-  //  HT_INFOF("ceph/main attempting to create pieces %d", argc);
   try {
     init_with_policies<Policies>(argc, argv);
     int port = get_i16("DfsBroker.Port");
@@ -78,7 +77,8 @@ int main (int argc, char **argv) {
 
     Comm *comm = Comm::instance();
     ApplicationQueuePtr app_queue = new ApplicationQueue(worker_count);
-    HT_INFOF("attemping to create new CephBroker with address %s", properties->get_str("CephBroker.MonAddr").c_str());
+    HT_INFOF("attemping to create new CephBroker with address %s",
+            properties->get_str("CephBroker.MonAddr").c_str());
     BrokerPtr broker = new CephBroker(properties);
     HT_INFO("Created CephBroker!");
     ConnectionHandlerFactoryPtr chfp =
@@ -94,3 +94,4 @@ int main (int argc, char **argv) {
   }
   return 0;
 }
+

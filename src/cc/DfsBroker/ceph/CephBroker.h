@@ -5,7 +5,7 @@
  *
  * Hypertable is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 3
+ * as published by the Free Software Foundation; either version 2
  * of the License, or any later version.
  *
  * Hypertable is distributed in the hope that it will be useful,
@@ -24,13 +24,14 @@ extern "C" {
 #include <unistd.h>
 }
 
-#include <ceph/libceph.h>
+#include <cephfs/libcephfs.h>
 
 #include "Common/String.h"
 #include "Common/atomic.h"
 #include "Common/Properties.h"
 
 #include "DfsBroker/Lib/Broker.h"
+
 
 namespace Hypertable {
   using namespace DfsBroker;
@@ -39,9 +40,10 @@ namespace Hypertable {
    */
   class OpenFileDataCeph : public OpenFileData {
   public:
-    OpenFileDataCeph(const String& fname, int _fd, int _flags) :
-      fd(_fd), flags(_flags), filename(fname) {}
-    virtual ~OpenFileDataCeph() { ceph_close(fd); }
+    OpenFileDataCeph(struct ceph_mount_info *cmount_, const String& fname,
+		     int _fd, int _flags);
+    virtual ~OpenFileDataCeph();
+    struct ceph_mount_info *cmount;
     int fd;
     int flags;
     String filename;
@@ -92,6 +94,7 @@ namespace Hypertable {
                        StaticBuffer &serialized_parameters);
 
   private:
+    struct ceph_mount_info *cmount;
     static atomic_t ms_next_fd;
 
     virtual void report_error(ResponseCallback *cb, int error);
@@ -111,3 +114,4 @@ namespace Hypertable {
 }
 
 #endif //HYPERTABLE_CEPH_BROKER_H
+
