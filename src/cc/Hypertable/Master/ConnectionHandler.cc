@@ -142,8 +142,7 @@ void ConnectionHandler::handle(EventPtr &event) {
         expire_time.sec += 15;
         m_context->op->timed_wait_for_idle(expire_time);
         m_context->op->shutdown();
-        m_context->mml_writer->close();
-        _exit(0);
+        break;
       case MasterProtocol::COMMAND_CREATE_NAMESPACE:
         operation = new OperationCreateNamespace(m_context, event);
         break;

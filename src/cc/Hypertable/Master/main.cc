@@ -227,9 +227,11 @@ int main(int argc, char **argv) {
         BalancePlanAuthority *bpa
             = dynamic_cast<BalancePlanAuthority *>(entities[i].get());
         HT_ASSERT(bpa);
-        HT_INFO_OUT << "Loading BalancePlanAuthority: " << *bpa << HT_END;
-        bpa->set_mml_writer(context->mml_writer);
-        context->set_balance_plan_authority(bpa);
+        if (!bpa->is_empty()) {
+          HT_INFO_OUT << "Loading BalancePlanAuthority: " << *bpa << HT_END;
+          bpa->set_mml_writer(context->mml_writer);
+          context->set_balance_plan_authority(bpa);
+        }
       }
     }
 
@@ -277,6 +279,7 @@ int main(int argc, char **argv) {
     context->comm->listen(listen_addr, hf);
 
     context->op->join();
+    context->mml_writer->close();
     context->comm->close_socket(listen_addr);
 
     context->response_manager->shutdown();

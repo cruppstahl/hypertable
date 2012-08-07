@@ -127,6 +127,8 @@ namespace Hypertable {
                 ms_cond.wait(lock);
             }
 
+            if (m_state.shutdown)
+              return;
             task->execute();
 
           }

@@ -44,6 +44,9 @@ namespace Hypertable {
 
     virtual ~BalancePlanAuthority() { }
 
+    // returns true if there are no pending balance plans
+    bool is_empty();
+
     // creates a new recovery plan; invoked by OperationRecoverRanges
     void create_recovery_plan(const String &location,
             const vector<QualifiedRangeStateSpecManaged> &root_range, 

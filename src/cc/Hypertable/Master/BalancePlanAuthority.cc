@@ -155,6 +155,12 @@ BalancePlanAuthority::remove_recovery_plan(const String &location)
   m_mml_writer->record_state(this);
 }
 
+bool
+BalancePlanAuthority::is_empty()
+{
+  return (m_map.empty());
+}
+
 void
 BalancePlanAuthority::create_recovery_plan(const String &location,
         const vector<QualifiedRangeStateSpecManaged> &root_ranges, 

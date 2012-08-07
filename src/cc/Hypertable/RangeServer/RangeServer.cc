@@ -3703,8 +3703,8 @@ void RangeServer::phantom_load(ResponseCallback *cb, const String &location,
       << fragments.size() << ", num_ranges=" << ranges.size() << HT_END;
 
   if (!m_replay_finished) {
-      if (!wait_for_recovery_finish(cb->get_event()->expiration_time()))
-        return;
+    if (!wait_for_recovery_finish(cb->get_event()->expiration_time()))
+      return;
   }
 
   HT_MAYBE_FAIL("phantom-receive-1");
