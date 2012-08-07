@@ -35,11 +35,13 @@ namespace Hypertable {
 
   class RangeStatsGatherer : public ReferenceCount {
   public:
-    RangeStatsGatherer(TableInfoMapPtr &table_info_map) : m_table_info_map(table_info_map) { }
+    RangeStatsGatherer(TableInfoMapPtr &table_info_map)
+      : m_table_info_map(table_info_map) { }
 
     virtual ~RangeStatsGatherer() { }
 
-    void fetch(RangeDataVector &range_data, TableMutator *mutator=0, int *log_generation=0);
+    void fetch(RangeDataVector &range_data, TableMutator *mutator = 0,
+            int *log_generation = 0);
 
     void clear();
 
@@ -47,8 +49,8 @@ namespace Hypertable {
     ByteArena m_arena;
     TableInfoMapPtr m_table_info_map;
   };
-  typedef intrusive_ptr<RangeStatsGatherer> RangeStatsGathererPtr;
 
+  typedef intrusive_ptr<RangeStatsGatherer> RangeStatsGathererPtr;
 }
 
 #endif // HYPERTABLE_RANGESTATSGATHERER_H

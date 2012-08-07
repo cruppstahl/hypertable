@@ -178,9 +178,7 @@ void MaintenanceScheduler::schedule() {
   int64_t shadow_cache_memory = 0;
   int64_t not_acknowledged = 0;
 
-  /**
-   * Purge commit log fragments
-   */
+  // Purge commit log fragments
   {
     int64_t revision_user = TIMESTAMP_MAX;
     int64_t revision_metadata = TIMESTAMP_MAX;
@@ -194,11 +192,12 @@ void MaintenanceScheduler::schedule() {
     trace_str += String("before revision_system\t") + revision_system + "\n";
     trace_str += String("before revision_user\t") + revision_user + "\n";
 
-    for (size_t i=0; i<range_data.size(); i++) {
+    for (size_t i = 0; i < range_data.size(); i++) {
 
       log_dir_hashes.insert(range_data[i].data->log_hash);
 
-      if (range_data[i].data->needs_major_compaction && priority <= m_move_compactions_per_interval) {
+      if (range_data[i].data->needs_major_compaction
+          && priority <= m_move_compactions_per_interval) {
         range_data[i].data->priority = priority++;
         range_data[i].data->maintenance_flags = MaintenanceFlag::COMPACT_MOVE;
       }
@@ -206,8 +205,8 @@ void MaintenanceScheduler::schedule() {
       if (!range_data[i].data->load_acknowledged)
         not_acknowledged++;
 
-      for (ag_data = range_data[i].data->agdata; ag_data; ag_data = ag_data->next) {
-
+      for (ag_data = range_data[i].data->agdata; ag_data;
+          ag_data = ag_data->next) {
         // compute memory stats
         cell_cache_memory += ag_data->mem_allocated;
         for (cs_data = ag_data->csdata; cs_data; cs_data = cs_data->next) {
@@ -243,21 +242,26 @@ void MaintenanceScheduler::schedule() {
     trace_str += String("after revision_user\t") + revision_user + "\n";
 
     if (Global::root_log)
-      Global::root_log->purge(revision_root, log_dir_hashes, log_generation);
-
+      Global::root_log->purge(revision_root, log_dir_hashes,
+              log_generation);
     if (Global::metadata_log)
-      Global::metadata_log->purge(revision_metadata, log_dir_hashes, log_generation);
-
+      Global::metadata_log->purge(revision_metadata, log_dir_hashes,
+              log_generation);
     if (Global::system_log)
-      Global::system_log->purge(revision_system, log_dir_hashes, log_generation);
-
+      Global::system_log->purge(revision_system, log_dir_hashes,
+              log_generation);
     if (Global::user_log)
-      Global::user_log->purge(revision_user, log_dir_hashes, log_generation);
+      Global::user_log->purge(revision_user, log_dir_hashes,
+              log_generation);
   }
 
   {
-    int64_t block_cache_memory = Global::block_cache ? Global::block_cache->memory_used() : 0;
-    int64_t total_memory = block_cache_memory + block_index_memory + bloom_filter_memory + cell_cache_memory + shadow_cache_memory + m_query_cache_memory;
+    int64_t block_cache_memory = Global::block_cache
+                                    ? Global::block_cache->memory_used()
+                                    : 0;
+    int64_t total_memory = block_cache_memory + block_index_memory
+        + bloom_filter_memory + cell_cache_memory + shadow_cache_memory
+        + m_query_cache_memory;
     double block_cache_pct = ((double)block_cache_memory / (double)total_memory) * 100.0;
     double block_index_pct = ((double)block_index_memory / (double)total_memory) * 100.0;
     double bloom_filter_pct = ((double)bloom_filter_memory / (double)total_memory) * 100.0;
@@ -293,7 +297,7 @@ void MaintenanceScheduler::schedule() {
   // was in progress
   if (!m_initialized) {
     int level = 0, priority = 0;
-    for (size_t i=0; i<range_data.size(); i++) {
+    for (size_t i = 0; i < range_data.size(); i++) {
       if (range_data[i].data->state == RangeState::SPLIT_LOG_INSTALLED ||
           range_data[i].data->state == RangeState::SPLIT_SHRUNK) {
         level = get_level(range_data[i]);

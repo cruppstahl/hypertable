@@ -325,15 +325,14 @@ RangeServer::RangeServer(PropertiesPtr &props, ConnectionManagerPtr &conn_mgr,
 
   initialize(props);
 
-  /**
-   * Create maintenance scheduler
-   */
+  // Create maintenance scheduler
   m_maintenance_stats_gatherer = new RangeStatsGatherer(m_live_map);
-  m_maintenance_scheduler = new MaintenanceScheduler(Global::maintenance_queue, m_server_stats, m_maintenance_stats_gatherer);
+  m_maintenance_scheduler = new MaintenanceScheduler(Global::maintenance_queue,
+          m_server_stats, m_maintenance_stats_gatherer);
 
   // Create "update" threads
-  for (int i=0; i<3; i++)
-    m_update_threads.push_back( new Thread(UpdateThread(this, i)) );
+  for (int i = 0; i < 3; i++)
+    m_update_threads.push_back(new Thread(UpdateThread(this, i)));
 
   local_recover();
 
@@ -349,11 +348,12 @@ RangeServer::RangeServer(PropertiesPtr &props, ConnectionManagerPtr &conn_mgr,
   int64_t threshold_max = (int64_t)(mem_stat.ram *
                                     max_memory_ratio * (double)MiB);
 
-  Global::log_prune_threshold_max = cfg.get_i64("CommitLog.PruneThreshold.Max", threshold_max);
+  Global::log_prune_threshold_max = cfg.get_i64("CommitLog.PruneThreshold.Max",
+          threshold_max);
 
-  HT_INFOF("Prune thresholds - min=%lld, max=%lld", (Lld)Global::log_prune_threshold_min,
-           (Lld)Global::log_prune_threshold_max);
-
+  HT_INFOF("Prune thresholds - min=%lld, max=%lld",
+          (Lld)Global::log_prune_threshold_min,
+          (Lld)Global::log_prune_threshold_max);
 }
 
 void RangeServer::shutdown() {
@@ -4093,8 +4093,6 @@ void RangeServer::phantom_commit_ranges(ResponseCallback *cb, int64_t op_id,
           table_info = new TableInfo(m_master_client, &rr.table,
                                      phantom_table_info->get_schema());
           tmp_table_info_map->set(rr.table.id, table_info);
-          //HT_DEBUGF("Created new table_info object %p",
-          //        (void *)table_info.get());
         }
         HT_ASSERT(table_info);
         range = phantom_range->get_range();
@@ -4223,7 +4221,7 @@ void RangeServer::phantom_commit_ranges(ResponseCallback *cb, int64_t op_id,
         HT_ASSERT(range->get_state() == RangeState::STEADY);
     }
     if (!maintenance_tasks.empty()) {
-      for (size_t i=0; i<maintenance_tasks.size(); i++)
+      for (size_t i = 0; i < maintenance_tasks.size(); i++)
         Global::maintenance_queue->add(maintenance_tasks[i]);
         // XXX: SJ i am here do we need to wait till
         // maintenance_tasks are complete?
