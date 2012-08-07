@@ -132,7 +132,7 @@ RangeServerClient::acknowledge_load(const CommAddress &addr,
   DispatchHandlerSynchronizer sync_handler;
   EventPtr event;
   CommBufPtr cbp(RangeServerProtocol::create_request_acknowledge_load(ranges));
-  foreach (QualifiedRangeSpec *qrs, ranges) {
+  foreach_ht (QualifiedRangeSpec *qrs, ranges) {
     response_map[*qrs] = Error::NO_RESPONSE;
   }
 
@@ -159,7 +159,7 @@ RangeServerClient::acknowledge_load(const CommAddress &addr,
     if (it == response_map.end()) {
       HT_ERROR_OUT << "received ack for range " << qrs 
           << " expected one of:" << HT_END;
-      foreach (QualifiedRangeSpec *qrs, ranges) {
+      foreach_ht (QualifiedRangeSpec *qrs, ranges) {
         HT_ERROR_OUT << *qrs << HT_END;
       }
       HT_ABORT;

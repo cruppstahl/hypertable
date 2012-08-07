@@ -84,7 +84,7 @@ CommitLogReader::CommitLogReader(FilesystemPtr &fs, const String &log_dir,
   if (get_bool("Hypertable.CommitLog.SkipErrors"))
     CommitLogBlockStream::ms_assert_on_error = false;
 
-  foreach(uint32_t fragment, fragment_filter)
+  foreach_ht(uint32_t fragment, fragment_filter)
     m_fragment_filter.insert(fragment);
 
   load_fragments(log_dir, 0);
@@ -145,7 +145,7 @@ CommitLogReader::next_raw_block(CommitLogBlockInfo *infop,
 }
 
 void CommitLogReader::get_init_fragment_ids(vector<uint32_t> &ids) {
-  foreach(uint32_t id, m_init_fragments) {
+  foreach_ht(uint32_t id, m_init_fragments) {
     ids.push_back(id);
   }
 }
@@ -317,10 +317,10 @@ void CommitLogReader::load_compressor(uint16_t ztype) {
 }
 
 void CommitLogReader::populate_init_fragments() {
-  foreach(const CommitLogFileInfo *fragment, m_fragment_queue) {
+  foreach_ht(const CommitLogFileInfo *fragment, m_fragment_queue) {
     m_init_fragments.push_back(fragment->num);
   }
-  foreach(const CommitLogFileInfo *fragment, m_fragment_queue) {
+  foreach_ht(const CommitLogFileInfo *fragment, m_fragment_queue) {
     if (fragment->log_dir == m_log_dir) {
       m_current_fragment_id = fragment->num;
       break;
@@ -330,7 +330,7 @@ void CommitLogReader::populate_init_fragments() {
 #if 0
   String msg = (String)"For commit log " + m_log_dir + "current_fragment is "
       + m_current_fragment_id + " set of fragments is ";
-  foreach(uint32_t &fragment, m_init_fragments)
+  foreach_ht(uint32_t &fragment, m_init_fragments)
     msg = msg + " " + fragment;
   HT_DEBUG_OUT << msg << HT_END;
 #endif

@@ -251,7 +251,7 @@ BalancePlanAuthority::create_range_plan(const String &location, int type,
   StringSet::const_iterator location_it = active_locations.begin();
 
   // round robin through the locations and assign the ranges
-  foreach (const QualifiedRangeStateSpec &range, ranges) {
+  foreach_ht (const QualifiedRangeStateSpec &range, ranges) {
     if (location_it == active_locations.end())
       location_it = active_locations.begin();
     plan->receiver_plan.insert(location_it->c_str(),
@@ -262,7 +262,7 @@ BalancePlanAuthority::create_range_plan(const String &location, int type,
 
   location_it = active_locations.begin();
   // round robin through the locations and assign the fragments
-  foreach (uint32_t fragment, fragments) {
+  foreach_ht (uint32_t fragment, fragments) {
     if (location_it == active_locations.end())
       location_it = active_locations.begin();
     plan->replay_plan.insert(location_it->c_str(), fragment);
@@ -286,7 +286,7 @@ BalancePlanAuthority::update_range_plan(RangeRecoveryPlanPtr &plan,
   vector<uint32_t> fragments;
   plan->replay_plan.get_fragments(location.c_str(), fragments);
   // round robin through the locations and assign the fragments
-  foreach (uint32_t fragment, fragments) {
+  foreach_ht (uint32_t fragment, fragments) {
     if (location_it == active_locations.end())
       location_it = active_locations.begin();
     plan->replay_plan.insert(location_it->c_str(), fragment);
@@ -297,7 +297,7 @@ BalancePlanAuthority::update_range_plan(RangeRecoveryPlanPtr &plan,
   vector<QualifiedRangeStateSpec> ranges;
   plan->receiver_plan.get_range_state_specs(location.c_str(), ranges);
   // round robin through the locations and assign the ranges
-  foreach (const QualifiedRangeStateSpec &range, ranges) {
+  foreach_ht (const QualifiedRangeStateSpec &range, ranges) {
     if (location_it == active_locations.end())
       location_it = active_locations.begin();
     plan->receiver_plan.insert(location_it->c_str(),
@@ -312,7 +312,7 @@ BalancePlanAuthority::register_balance_plan(BalancePlanPtr &plan) {
   ScopedLock lock(m_mutex);
 
   // Insert moves into current set
-  foreach (RangeMoveSpecPtr &move, plan->moves)
+  foreach_ht (RangeMoveSpecPtr &move, plan->moves)
     m_current_set.insert(move);
 
   HT_INFO_OUT << "Balance plan registered move " << plan->moves.size()

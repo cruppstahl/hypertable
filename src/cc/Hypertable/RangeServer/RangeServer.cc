@@ -1831,7 +1831,7 @@ RangeServer::acknowledge_load(ResponseCallbackAcknowledgeLoad *cb,
 
   {
     ScopedLock lock(m_drop_table_mutex);
-    foreach (const QualifiedRangeSpec &rr, ranges) {
+    foreach_ht (const QualifiedRangeSpec &rr, ranges) {
       HT_INFO_OUT << "Acknowledging range: " << rr.table.id << "["
           << rr.range.start_row << ".." << rr.range.end_row << "]" << HT_END;
 
@@ -3589,7 +3589,7 @@ void RangeServer::replay_fragments(ResponseCallback *cb, int64_t op_id,
     CommAddress addr;
     uint32_t timeout_ms = m_props->get_i32("Hypertable.Request.Timeout");
     Timer timer(replay_timeout);
-    foreach(const String &receiver, receivers) {
+    foreach_ht(const String &receiver, receivers) {
       addr.set_proxy(receiver);
       m_conn_manager->add(addr, timeout_ms, "RangeServer");
       if (!m_conn_manager->wait_for_connection(addr, timer.remaining())) {
@@ -3671,7 +3671,7 @@ void RangeServer::replay_fragments(ResponseCallback *cb, int64_t op_id,
   // failures and receiving rangeservers should fail hard)
   map<uint32_t, uint32_t> log_error_map = log_reader->get_error_map();
   map<uint32_t, int> error_map;
-  foreach (uint32_t fragment, fragments)
+  foreach_ht (uint32_t fragment, fragments)
     if (log_error_map.find(fragment) != log_error_map.end())
       error_map[fragment] = log_error_map[fragment];
     else
@@ -3721,7 +3721,7 @@ void RangeServer::phantom_load(ResponseCallback *cb, const String &location,
   }
 
   try {
-    foreach(const QualifiedRangeStateSpec &range, ranges) {
+    foreach_ht(const QualifiedRangeStateSpec &range, ranges) {
       register_table = false;
       if (verified_tables.find(range.qualified_range.table)
               == verified_tables.end()) {
@@ -3851,7 +3851,7 @@ void RangeServer::phantom_prepare_ranges(ResponseCallback *cb, int64_t op_id,
   map<QualifiedRangeSpec, int> error_ranges;
 
   try {
-    foreach(const QualifiedRangeSpec &rr, ranges) {
+    foreach_ht(const QualifiedRangeSpec &rr, ranges) {
       phantom_table_info = 0;
       HT_ASSERT(m_phantom_map->get(rr.table.id, phantom_table_info)
               && phantom_table_info);
@@ -3899,7 +3899,7 @@ void RangeServer::phantom_prepare_ranges(ResponseCallback *cb, int64_t op_id,
     }
 
     CommitLog *log;
-    foreach(const QualifiedRangeSpec &rr, ranges) {
+    foreach_ht(const QualifiedRangeSpec &rr, ranges) {
       phantom_range_map->get(rr, phantom_range);
       HT_ASSERT(phantom_range.get());
       bool is_empty = true;
@@ -4051,7 +4051,7 @@ void RangeServer::phantom_commit_ranges(ResponseCallback *cb, int64_t op_id,
   }
   cb->response_ok();
 
-  foreach(const QualifiedRangeSpec &rr, ranges) {
+  foreach_ht(const QualifiedRangeSpec &rr, ranges) {
     try {
       bool is_phantom = true;
       RangePtr range;
@@ -4208,10 +4208,10 @@ void RangeServer::phantom_commit_ranges(ResponseCallback *cb, int64_t op_id,
     }
     boost::xtime now;
     boost::xtime_get(&now, boost::TIME_UTC);
-    int priority=0;
+    int priority = 0;
     // schedule maintenance if needed
     vector<MaintenanceTask*> maintenance_tasks;
-    foreach(RangePtr &range, range_vec) {
+    foreach_ht(RangePtr &range, range_vec) {
       if (range->get_state() == RangeState::SPLIT_LOG_INSTALLED ||
           range->get_state() == RangeState::SPLIT_SHRUNK)
         maintenance_tasks.push_back(new MaintenanceTaskSplit(0, priority++,

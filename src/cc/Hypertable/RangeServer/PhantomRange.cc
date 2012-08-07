@@ -31,7 +31,7 @@ PhantomRange::PhantomRange(const QualifiedRangeStateSpec &range,
         SchemaPtr &schema, const vector<uint32_t> &fragments) 
   : m_spec(range), m_schema(schema), m_outstanding(fragments.size()), 
     m_state(INIT) {
-  foreach(uint32_t fragment, fragments) {
+  foreach_ht(uint32_t fragment, fragments) {
     HT_ASSERT(m_fragments.count(fragment) == 0);
     FragmentDataPtr data = new FragmentData(fragment);
     m_fragments[fragment] = data;
@@ -48,7 +48,7 @@ bool PhantomRange::add(uint32_t fragment, bool more, EventPtr &event) {
   FragmentMap::iterator it = m_fragments.find(fragment);
   if (it == m_fragments.end()) {
     String msg = format("Unexpected fragment %u, expected one of ", fragment);
-    foreach(const FragmentMap::value_type &vv, m_fragments)
+    foreach_ht(const FragmentMap::value_type &vv, m_fragments)
       msg = msg + (String)" " + vv.first;
     HT_ERROR_OUT << msg << HT_END;
     return false;
@@ -134,7 +134,7 @@ void PhantomRange::populate_range_and_log(FilesystemPtr &log_dfs,
   int64_t latest_revision;
 
   Locker<Range> range_lock(*(m_range.get()));
-  foreach (FragmentMap::value_type &vv, m_fragments) {
+  foreach_ht (FragmentMap::value_type &vv, m_fragments) {
     dbuf.clear();
     m_spec.qualified_range.table.encode(&dbuf.ptr);
     vv.second->merge(m_range, dbuf, &latest_revision);

@@ -409,7 +409,7 @@ void OperationRecover::read_rsml() {
         + rsml_definition->name();
     rsml_reader = new MetaLog::Reader(m_context->dfs, rsml_definition, logfile);
     rsml_reader->get_entities(entities);
-    foreach (MetaLog::EntityPtr &entity, entities) {
+    foreach_ht (MetaLog::EntityPtr &entity, entities) {
       if ((range = dynamic_cast<MetaLog::EntityRange *>(entity.get())) != 0) {
         QualifiedRangeStateSpec qrss;
         // skip phantom ranges, let whoever was recovering them deal with them
@@ -439,13 +439,13 @@ void OperationRecover::read_rsml() {
 
 size_t OperationRecover::encoded_state_length() const {
   size_t len = Serialization::encoded_length_vstr(m_location) + 17;
-  foreach(const QualifiedRangeStateSpecManaged &range, m_root_range)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_root_range)
     len += range.encoded_length();
-  foreach(const QualifiedRangeStateSpecManaged &range, m_metadata_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_metadata_ranges)
     len += range.encoded_length();
-  foreach(const QualifiedRangeStateSpecManaged &range, m_system_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_system_ranges)
     len += range.encoded_length();
-  foreach(const QualifiedRangeStateSpecManaged &range, m_user_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_user_ranges)
     len += range.encoded_length();
   return len;
 }
@@ -454,16 +454,16 @@ void OperationRecover::encode_state(uint8_t **bufp) const {
   Serialization::encode_vstr(bufp, m_location);
   Serialization::encode_bool(bufp, m_waiting);
   Serialization::encode_i32(bufp, m_root_range.size());
-  foreach(const QualifiedRangeStateSpecManaged &range, m_root_range)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_root_range)
     range.encode(bufp);
   Serialization::encode_i32(bufp, m_metadata_ranges.size());
-  foreach(const QualifiedRangeStateSpecManaged &range, m_metadata_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_metadata_ranges)
     range.encode(bufp);
   Serialization::encode_i32(bufp, m_system_ranges.size());
-  foreach(const QualifiedRangeStateSpecManaged &range, m_system_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_system_ranges)
     range.encode(bufp);
   Serialization::encode_i32(bufp, m_user_ranges.size());
-  foreach(const QualifiedRangeStateSpecManaged &range, m_user_ranges)
+  foreach_ht(const QualifiedRangeStateSpecManaged &range, m_user_ranges)
     range.encode(bufp);
 }
 

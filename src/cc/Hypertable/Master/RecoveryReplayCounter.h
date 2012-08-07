@@ -56,7 +56,7 @@ namespace Hypertable {
       if (attempt != m_attempt)
         return false;
 
-      foreach (const ErrorMap::value_type &vv, error_map) {
+      foreach_ht (const ErrorMap::value_type &vv, error_map) {
         m_error_map[vv.first] = vv.second;
         if (vv.second != Error::OK)  {
           HT_WARN_OUT << "Received error " << vv.second << " for fragment "
@@ -94,7 +94,7 @@ namespace Hypertable {
     void set_errors(const std::vector<uint32_t> &fragments, int error) {
       ScopedLock lock(m_mutex);
       m_outstanding -= fragments.size();
-      foreach(uint32_t fragment, fragments) {
+      foreach_ht(uint32_t fragment, fragments) {
         m_error_map[fragment] = error;
       }
       if (m_outstanding == 0) {

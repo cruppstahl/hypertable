@@ -358,7 +358,7 @@ bool OperationRecoverRanges::phantom_load_ranges() {
   vector<uint32_t> fragments;
 
   m_plan.replay_plan.get_fragments(fragments);
-  foreach (const String &location, locations) {
+  foreach_ht (const String &location, locations) {
     addr.set_proxy(location);
     vector<QualifiedRangeStateSpec> ranges;
     m_plan.receiver_plan.get_range_state_specs(location.c_str(), ranges);
@@ -410,7 +410,7 @@ bool OperationRecoverRanges::replay_fragments() {
   StringSet replay_locations;
   m_plan.replay_plan.get_locations(replay_locations);
 
-  foreach(const String &location, replay_locations) {
+  foreach_ht(const String &location, replay_locations) {
     bool added = false;
     try {
       fragments.clear();
@@ -519,7 +519,7 @@ bool OperationRecoverRanges::prepare_to_commit() {
   RecoveryCounterPtr counter = 
       m_context->recovery_state().create_prepare_counter(id(), m_attempt);
 
-  foreach(const String &location, locations) {
+  foreach_ht(const String &location, locations) {
     addr.set_proxy(location);
     vector<QualifiedRangeSpec> ranges;
     m_plan.receiver_plan.get_qualified_range_specs(location.c_str(), ranges);
@@ -556,7 +556,7 @@ bool OperationRecoverRanges::commit() {
   RecoveryCounterPtr counter = 
       m_context->recovery_state().create_commit_counter(id(), m_attempt);
 
-  foreach(const String &location, locations) {
+  foreach_ht(const String &location, locations) {
     addr.set_proxy(location);
     vector<QualifiedRangeSpec> ranges;
     m_plan.receiver_plan.get_qualified_range_specs(location.c_str(), ranges);
@@ -590,7 +590,7 @@ bool OperationRecoverRanges::acknowledge() {
   bool success = true;
   m_plan.receiver_plan.get_locations(locations);
 
-  foreach(const String &location, locations) {
+  foreach_ht(const String &location, locations) {
     addr.set_proxy(location);
     vector<QualifiedRangeSpec> ranges;
     vector<QualifiedRangeSpec *> range_ptrs;
@@ -598,7 +598,7 @@ bool OperationRecoverRanges::acknowledge() {
     map<QualifiedRangeSpec, int>::iterator response_map_it;
 
     m_plan.receiver_plan.get_qualified_range_specs(location.c_str(), ranges);
-    foreach(QualifiedRangeSpec &range, ranges)
+    foreach_ht(QualifiedRangeSpec &range, ranges)
       range_ptrs.push_back(&range);
     try {
       HT_INFO_OUT << "Issue acknowledge_load for " << range_ptrs.size()

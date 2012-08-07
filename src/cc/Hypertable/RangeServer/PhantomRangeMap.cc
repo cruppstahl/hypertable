@@ -76,7 +76,7 @@ void PhantomRangeMap::remove(const QualifiedRangeSpec &range) {
 
 void PhantomRangeMap::get_all(vector<PhantomRangePtr> &range_vec) {
   ScopedLock lock(m_mutex);
-  foreach(Map::value_type &vv, m_map)
+  foreach_ht(Map::value_type &vv, m_map)
     range_vec.push_back(vv.second);
 }
 

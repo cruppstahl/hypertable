@@ -52,7 +52,7 @@ void FragmentData::merge(RangePtr &range, DynamicBuffer &dbuf,
   size_t total_size = 0;
 
   // de-serialize all objects
-  foreach(EventPtr &event, m_data) {
+  foreach_ht(EventPtr &event, m_data) {
     const uint8_t *decode_ptr = event->payload;
     size_t decode_remain = event->payload_len;
     location = Serialization::decode_vstr(&decode_ptr, &decode_remain);
@@ -71,7 +71,7 @@ void FragmentData::merge(RangePtr &range, DynamicBuffer &dbuf,
   // resize the buffer
   dbuf.ensure(total_size);
 
-  foreach(Fragment &fragment, fragments) {
+  foreach_ht(Fragment &fragment, fragments) {
     const uint8_t *mod, *mod_end;
     mod_end = fragment.first + fragment.second;
     mod = fragment.first;

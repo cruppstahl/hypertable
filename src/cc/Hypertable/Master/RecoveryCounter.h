@@ -51,7 +51,7 @@ namespace Hypertable {
 
     void add(const std::vector<QualifiedRangeSpec> &ranges) {
       ScopedLock lock(m_mutex);
-      foreach (const QualifiedRangeSpec &range, ranges)
+      foreach_ht (const QualifiedRangeSpec &range, ranges)
         m_outstanding_ranges.insert(range);
     }
 
@@ -64,7 +64,7 @@ namespace Hypertable {
         return;
       }
 
-      foreach(Result &rr, results) {
+      foreach_ht (Result &rr, results) {
         if (rr.error != Error::OK) {
           m_errors = true;
           HT_INFO_OUT << "Received error " << rr.error << " for range "
@@ -95,7 +95,7 @@ namespace Hypertable {
           HT_WARN_OUT << "RecoveryCounter timed out" << HT_END;
           m_errors = true;
           m_timed_out = true;
-          foreach (const QualifiedRangeSpec &range, m_outstanding_ranges) {
+          foreach_ht (const QualifiedRangeSpec &range, m_outstanding_ranges) {
             HT_INFO_OUT << "Range " << range.range.start_row << ".."
                 << range.range.end_row << " timed out" << HT_END;
             Result rr;
@@ -127,7 +127,7 @@ namespace Hypertable {
       ScopedLock lock(m_mutex);
       std::set<QualifiedRangeSpec>::iterator set_it;
 
-      foreach(const QualifiedRangeSpec &range, ranges) {
+      foreach_ht (const QualifiedRangeSpec &range, ranges) {
         set_it = m_outstanding_ranges.find(range);
         if (set_it != m_outstanding_ranges.end()) {
           Result rr;

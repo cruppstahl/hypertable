@@ -39,10 +39,10 @@ ReplayBuffer::ReplayBuffer(PropertiesPtr &props, Comm *comm,
 
   StringSet locations;
   m_plan.get_locations(locations);
-  foreach(const String &location, locations) {
+  foreach_ht(const String &location, locations) {
     vector<QualifiedRangeStateSpec> ranges;
     m_plan.get_range_state_specs(location.c_str(), ranges);
-    foreach(QualifiedRangeStateSpec &range, ranges) {
+    foreach_ht(QualifiedRangeStateSpec &range, ranges) {
       RangeReplayBufferPtr replay_buffer
           = new RangeReplayBuffer(location, range.qualified_range);
       m_buffer_map[range.qualified_range] = replay_buffer;
@@ -88,7 +88,7 @@ void ReplayBuffer::add(const TableIdentifier &table, SerializedKey &key,
 void ReplayBuffer::flush(bool flush /* = true */) {
   ReplayDispatchHandler handler(m_comm, m_location, m_timeout_ms);
 
-  foreach(ReplayBufferMap::value_type &vv, m_buffer_map) {
+  foreach_ht(ReplayBufferMap::value_type &vv, m_buffer_map) {
     // skip over any ranges that have completely received data for this fragment
     if (m_completed_ranges.find(vv.first) != m_completed_ranges.end())
       continue;
@@ -108,9 +108,9 @@ void ReplayBuffer::flush(bool flush /* = true */) {
     vector<QualifiedRangeSpec> ranges;
     handler.get_error_ranges(ranges);
     handler.get_error_locations(locations);
-    foreach(const String &location, locations)
+    foreach_ht(const String &location, locations)
       m_plan.get_qualified_range_specs(location.c_str(), ranges);
-    foreach(QualifiedRangeSpec range, ranges)
+    foreach_ht(QualifiedRangeSpec range, ranges)
       m_buffer_map.erase(range);
   }
 

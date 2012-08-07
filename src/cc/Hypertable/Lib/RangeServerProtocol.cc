@@ -303,14 +303,14 @@ namespace Hypertable {
   RangeServerProtocol::create_request_acknowledge_load(const vector<QualifiedRangeSpec*> &ranges) {
     CommHeader header(COMMAND_ACKNOWLEDGE_LOAD);
     header.flags |= CommHeader::FLAGS_BIT_URGENT;
-    size_t len=4;
-    foreach(const QualifiedRangeSpec *range, ranges) {
+    size_t len = 4;
+    foreach_ht(const QualifiedRangeSpec *range, ranges) {
       len += range->encoded_length();
     }
 
     CommBuf *cbuf = new CommBuf(header, len);
     Serialization::encode_i32(cbuf->get_data_ptr_address(), ranges.size());
-    foreach(const QualifiedRangeSpec *range, ranges) {
+    foreach_ht(const QualifiedRangeSpec *range, ranges) {
       range->encode(cbuf->get_data_ptr_address());
     }
 

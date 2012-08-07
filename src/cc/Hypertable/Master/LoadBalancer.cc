@@ -121,7 +121,7 @@ void LoadBalancer::calculate_balance_plan(const String &algo,
   boost::trim(algorithm);
   boost::to_lower(algorithm);
   if (algorithm.size() == 0) {
-    foreach(const RangeServerStatistics &server_stats, range_server_stats) {
+    foreach_ht(const RangeServerStatistics &server_stats, range_server_stats) {
       if (!server_stats.stats->live) {
         HT_INFO_OUT << "Found non-live server " << server_stats.location
                 << " wait till all servers are live before trying balance"
@@ -137,7 +137,7 @@ void LoadBalancer::calculate_balance_plan(const String &algo,
       size_t total_ranges = 0;
       get_unbalanced_servers(range_server_stats);
       size_t num_unbalanced_servers=m_unbalanced_servers.size();
-      foreach(const RangeServerStatistics &server_stats, range_server_stats) {
+      foreach_ht(const RangeServerStatistics &server_stats, range_server_stats) {
         total_ranges += server_stats.stats->range_count;
       }
       // 3 ranges shd always be in the system (2 metadata, 1 rs_metrics)
@@ -223,24 +223,6 @@ void LoadBalancer::distribute_load(const ptime &now,
   planner.compute_plan(plan);
 }
 
-bool LoadBalancer::wait_for_complete(RangeMoveSpecPtr &move, uint32_t timeout_millis) {
-  ScopedLock lock(m_mutex);
-  boost::xtime expire_time;
-  MoveSetT::iterator iter;
-
-  boost::xtime_get(&expire_time, boost::TIME_UTC_);
-  expire_time.sec += timeout_millis/1000;
-  expire_time.nsec += (int32_t)((double)(timeout_millis-(timeout_millis/1000)) * 1000000.0);
-
-  while ((iter = m_current_set.find(move)) != m_current_set.end() &&
-         (*iter)->complete == false) {
-    if (!m_cond.timed_wait(lock, expire_time))
-      return false;
-  }
-
-  return true;
-}
-
 void LoadBalancer::distribute_table_ranges(vector<RangeServerStatistics> &stats,
                     BalancePlanPtr &plan) {
   // no need to check if its time to do balance, we have empty servers,
@@ -262,7 +244,7 @@ void LoadBalancer::offload_servers(vector<RangeServerStatistics> &stats,
 void LoadBalancer::get_unbalanced_servers(const vector<RangeServerStatistics> &stats) {
   m_unbalanced_servers.clear();
   vector<String> servers;
-  foreach(const RangeServerStatistics &server_stats, stats)
+  foreach_ht(const RangeServerStatistics &server_stats, stats)
     servers.push_back(server_stats.location);
   m_context->get_unbalanced_servers(servers, m_unbalanced_servers);
 }
