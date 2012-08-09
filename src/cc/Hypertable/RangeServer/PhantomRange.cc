@@ -23,6 +23,7 @@
 #include "Common/md5.h"
 
 #include "PhantomRange.h"
+#include "Global.h"
 
 using namespace Hypertable;
 using namespace std;
@@ -87,8 +88,9 @@ void PhantomRange::create_range(MasterClientPtr &master_client,
         << HT_END;
   else {
     m_range = new Range(master_client, &m_spec.qualified_range.table, m_schema,
-        &m_spec.qualified_range.range,
-        table_info.get(), &m_spec.state, true);
+            &m_spec.qualified_range.range, table_info.get(),
+            &m_spec.state, true);
+
     // replay existing transfer log
     m_range->recovery_finalize();
     m_range->metalog_entity()->state.state =
@@ -97,6 +99,39 @@ void PhantomRange::create_range(MasterClientPtr &master_client,
     m_state = RANGE_CREATED;
   }
 }
+
+#if 0
+void PhantomRange::link_log()
+{
+  ScopedLock lock(m_mutex);
+
+  bool is_root = m_spec.qualified_range.table.is_metadata()
+      && (*m_spec.qualified_range.range.start_row == 0)
+      && !strcmp(m_spec.qualified_range.range.end_row, Key::END_ROOT_ROW);
+
+  // link the transfer log into the commit log
+  if (m_spec.state.transfer_log && *m_spec.state.transfer_log) {
+    CommitLogReaderPtr commit_log_reader =
+        new CommitLogReader(Global::log_dfs, m_spec.state.transfer_log);
+    if (!commit_log_reader->empty()) {
+      CommitLog *log;
+      if (is_root)
+        log = Global::root_log;
+      else if (m_spec.qualified_range.table.is_metadata())
+        log = Global::metadata_log;
+      else if (m_spec.qualified_range.table.is_system())
+        log = Global::system_log;
+      else
+        log = Global::user_log;
+      int error;
+      if ((error = log->link_log(commit_log_reader.get())) != Error::OK)
+          HT_THROWF(error, "Unable to link transfer log (%s) into commit "
+                  "log (%s)", m_spec.state.transfer_log,
+                  log->get_log_dir().c_str());
+    }
+  }
+}
+#endif
 
 void PhantomRange::populate_range_and_log(FilesystemPtr &log_dfs, 
         const String &log_dir, bool *is_empty) {

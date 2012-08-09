@@ -565,6 +565,8 @@ bool OperationRecoverRanges::commit() {
       counter->add(ranges);
       HT_INFO_OUT << "Issue phantom_commit_ranges for " << ranges.size()
           << " ranges to " << location << HT_END;
+      foreach_ht (QualifiedRangeSpec &rs, ranges)
+        HT_INFO_OUT << "  -- " << rs << HT_END;
       rsc.phantom_commit_ranges(addr, id(), m_attempt, m_location,
               ranges, m_timeout);
     }

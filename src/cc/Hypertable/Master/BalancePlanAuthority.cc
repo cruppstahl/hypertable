@@ -205,11 +205,9 @@ BalancePlanAuthority::create_recovery_plan(const String &location,
   // Remove ALL ranges that are FROM the failing node or are about
   // to be moved TO the failing node. These ranges are already part
   // of the balance plan anyway.
-  // TODO really? verify this
   MoveSetT::iterator iter = m_current_set.begin();
   while (iter != m_current_set.end()) {
     if (location == (*iter)->dest_location) {
-      HT_INFO_OUT << "XXX " << location << ": " << *iter << HT_END;
       MoveSetT::iterator iter2 = iter;
       m_current_set.erase(iter2);
     }

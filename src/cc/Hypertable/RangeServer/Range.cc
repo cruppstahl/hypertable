@@ -451,8 +451,8 @@ Range::MaintenanceData *Range::get_maintenance_data(ByteArena &arena, time_t now
                                                     TableMutator *mutator) {
   MaintenanceData *mdata = (MaintenanceData *)arena.alloc( sizeof(MaintenanceData) );
   AccessGroup::MaintenanceData **tailp = 0;
-  AccessGroupVector  ag_vector(0);
-  int64_t size=0;
+  AccessGroupVector ag_vector(0);
+  int64_t size = 0;
   int64_t starting_maintenance_generation;
 
   memset(mdata, 0, sizeof(MaintenanceData));
@@ -487,7 +487,7 @@ Range::MaintenanceData *Range::get_maintenance_data(ByteArena &arena, time_t now
     mdata->needs_major_compaction = m_metalog_entity->needs_compaction;
   }
 
-  for (size_t i=0; i<ag_vector.size(); i++) {
+  for (size_t i = 0; i < ag_vector.size(); i++) {
     if (mdata->agdata == 0) {
       mdata->agdata = ag_vector[i]->get_maintenance_data(arena, now);
       tailp = &mdata->agdata;
@@ -1013,7 +1013,7 @@ void Range::split_compact_and_shrink() {
     // This is needed to strip out the "live file" references
     if (m_split_off_high) {
       key_high.column_family = "Files";
-      for (size_t i=0; i<ag_vector.size(); i++) {
+      for (size_t i = 0; i < ag_vector.size(); i++) {
         key_high.column_qualifier = ag_vector[i]->get_name();
         key_high.column_qualifier_len = strlen(ag_vector[i]->get_name());
         ag_vector[i]->get_file_data(files, &total_blocks, false);
@@ -1033,7 +1033,7 @@ void Range::split_compact_and_shrink() {
     key_low.column_family = "StartRow";
     mutator->set(key_low, old_start_row.c_str(), old_start_row.length());
 
-    for (size_t i=0; i<ag_vector.size(); i++) {
+    for (size_t i = 0; i < ag_vector.size(); i++) {
       ag_vector[i]->get_file_data(files, &total_blocks, m_split_off_high);
       key_low.column_family = key_high.column_family = "BlockCount";
       key_low.column_qualifier = key_high.column_qualifier = ag_vector[i]->get_name();
@@ -1387,7 +1387,7 @@ void Range::recovery_finalize() {
                                    !m_metalog_entity->table.is_user());
 
     // re-initiate compaction
-    for (size_t i=0; i<m_access_group_vector.size(); i++)
+    for (size_t i = 0; i < m_access_group_vector.size(); i++)
       m_access_group_vector[i]->stage_compaction();
 
     if ((m_metalog_entity->state.state & RangeState::SPLIT_LOG_INSTALLED)
@@ -1402,7 +1402,7 @@ void Range::recovery_finalize() {
                "log='%s')", m_metalog_entity->state.transfer_log);
   }
 
-  for (size_t i=0; i<m_access_group_vector.size(); i++)
+  for (size_t i = 0; i < m_access_group_vector.size(); i++)
     m_access_group_vector[i]->recovery_finalize();
 }
 

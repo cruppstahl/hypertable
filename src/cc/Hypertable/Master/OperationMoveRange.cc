@@ -97,6 +97,7 @@ void OperationMoveRange::initialize_dependencies() {
 
 void OperationMoveRange::execute() {
   int32_t state = get_state();
+  String dest;
   String old_destination = m_destination;
   BalancePlanAuthority *bpa = m_context->get_balance_plan_authority();
 
@@ -110,13 +111,26 @@ void OperationMoveRange::execute() {
   switch (state) {
 
   case OperationState::INITIAL:
-    if (!bpa->get_balance_destination(m_table, m_range, m_destination)) {
+    if (!bpa->get_balance_destination(m_table, m_range, dest)) {
       HT_INFOF("MoveRange %s: BalancePlanAuthority cancelled move to %s",
-            m_range_name.c_str(), m_destination.c_str());
+            m_range_name.c_str(), dest.c_str());
       remove_approval_add(0x03);
       complete_ok();
       return;
     }
+
+    // if this range was assigned to a failed-over node: cancel the move. in
+    // this case the range will anyway be moved during recovery
+    if (!m_destination.empty() && m_destination != dest) {
+      HT_INFOF("MoveRange %s: BalancePlanAuthority cancelled because %s is "
+            "recovered", m_range_name.c_str(), m_destination.c_str());
+      remove_approval_add(0x03);
+      complete_ok();
+      return;
+    }
+
+    // save destination for later
+    m_destination = dest;
 
     // if the destination changed (i.e. because the old destination is
     // recovered) then update the metalog!
@@ -181,8 +195,7 @@ void OperationMoveRange::execute() {
             complete_ok();
             return;
           }
-          // server might be down - go back to the initial state and pick a
-          // new destination
+          // server might be down - go back to the initial state
           HT_WARNF("Problem moving range %s to %s: %s - %s",
                   m_range_name.c_str(), m_destination.c_str(),
                   Error::get_text(e.code()), e.what());

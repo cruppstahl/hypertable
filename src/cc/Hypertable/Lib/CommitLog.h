@@ -80,7 +80,7 @@ namespace Hypertable {
      */
     CommitLog(FilesystemPtr &fs, const String &log_dir,
               PropertiesPtr &props, CommitLogBase *init_log = 0,
-              bool is_meta=true)
+              bool is_meta = true)
       : CommitLogBase(log_dir), m_fs(fs) {
       initialize(log_dir, props, init_log, is_meta);
     }
@@ -92,7 +92,7 @@ namespace Hypertable {
      * @param log_dir directory of the commit log
      * @param is_meta true for root, system and metadata logs
      */
-    CommitLog(FilesystemPtr &fs, const String &log_dir, bool is_meta=true);
+    CommitLog(FilesystemPtr &fs, const String &log_dir, bool is_meta = true);
 
     virtual ~CommitLog();
 

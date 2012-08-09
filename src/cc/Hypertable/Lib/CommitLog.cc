@@ -194,8 +194,10 @@ int CommitLog::link_log(CommitLogBase *log_base) {
   DynamicBuffer input;
   String &log_dir = log_base->get_log_dir();
 
+  HT_INFOF("ZZZ %s: linking into %s", get_log_dir().c_str(), log_base->get_log_dir().c_str());
+
   if (m_linked_logs.count(md5_hash(log_dir.c_str())) > 0) {
-    HT_WARNF("Skipping log %s because it is already linked in", log_dir.c_str());
+    HT_WARNF("Skipping log %s because it is already linked in", get_log_dir().c_str());
     return Error::OK;
   }
 
@@ -242,9 +244,12 @@ int CommitLog::link_log(CommitLogBase *log_base) {
 
     foreach_ht (CommitLogFileInfo *fi, log_base->fragment_queue()) {
       if (fi->parent == 0) {
+        HT_INFOF("ZZZ -- %s: no parent", fi->log_dir.c_str());
         fi->parent = file_info;
         file_info->references++;
       }
+      else
+        HT_INFOF("ZZZ -- %s: has parent", fi->log_dir.c_str());
       m_fragment_queue.push_back(fi);
     }
     log_base->fragment_queue().clear();
@@ -322,6 +327,10 @@ int CommitLog::purge(int64_t revision, std::set<int64_t> remove_ok, int generati
   std::set<CommitLogFileInfo *>::iterator rm_iter, iter = m_reap_set.begin();
   while (iter != m_reap_set.end()) {
     if ((*iter)->references == 0 && (*iter)->generation <= generation) {
+      HT_INFOF("XXX1: erasing log_dir %s from reap set", (*iter)->log_dir.c_str());
+        foreach_ht (const String &ld, (*iter)->purge_dirs) {
+            HT_INFOF("XXX1 - about to remove %s", ld.c_str());
+        }
       remove_file_info(*iter);
       delete *iter;
       rm_iter = iter++;
@@ -336,7 +345,27 @@ int CommitLog::purge(int64_t revision, std::set<int64_t> remove_ok, int generati
     fi = m_fragment_queue.front();
     if (fi->revision < revision && fi->generation <= generation &&
        (!m_range_reference_required || remove_ok.count(fi->log_dir_hash) > 0)) {
+#if 0
+      // only remove this log if all its fragments can be removed
+      bool skip = false;
+      foreach_ht (const String &ld, fi->purge_dirs) {
+        if (!remove_ok.count(md5_hash(ld.c_str()))) {
+          HT_INFOF("Skipping because %s is not a live range", ld.c_str());
+          skip = true;
+          break;
+        }
+      }
+      if (skip)
+        break;
+#endif
       if (fi->references == 0) {
+        HT_INFOF("XXX2: erasing log_dir %s (reference required: %d, "
+            "remove_ok.count %d", fi->log_dir.c_str(),
+            (int)m_range_reference_required,
+            (int)remove_ok.count(fi->log_dir_hash));
+        foreach_ht (const String &ld, fi->purge_dirs) {
+          HT_INFOF("XXX2 - about to remove %s", ld.c_str());
+        }
         remove_file_info(fi);
         delete fi;
       }
