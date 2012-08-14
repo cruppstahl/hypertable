@@ -861,6 +861,15 @@ cmd_stop(Client *client, ParserState &state, HqlInterpreter::Callback &cb) {
   cb.on_finish();
 }
 
+void
+cmd_kill(Client *client, ParserState &state, HqlInterpreter::Callback &cb) {
+  MasterClientPtr master = client->get_master_client();
+
+  master->stop(state.rs_name, true);
+
+  cb.on_finish();
+}
+
 void cmd_shutdown_master(Client *client, HqlInterpreter::Callback &cb) {
   client->shutdown();
   cb.on_finish();
@@ -948,6 +957,8 @@ void HqlInterpreter::execute(const String &line, Callback &cb) {
       cmd_balance(m_client, state, cb);                            break;
     case COMMAND_STOP:
       cmd_stop(m_client, state, cb);                               break;
+    case COMMAND_KILL:
+      cmd_kill(m_client, state, cb);                               break;
 
     default:
       HT_THROW(Error::HQL_PARSE_ERROR, String("unsupported command: ") + stripped_line);

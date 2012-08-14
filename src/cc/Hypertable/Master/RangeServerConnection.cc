@@ -36,7 +36,8 @@ RangeServerConnection::RangeServerConnection(MetaLog::WriterPtr &mml_writer,
   : MetaLog::Entity(MetaLog::EntityType::RANGE_SERVER_CONNECTION), 
     m_mml_writer(mml_writer), m_location(location), m_hostname(hostname), 
     m_state(RangeServerConnectionFlags::INIT), m_removal_time(0), 
-    m_public_addr(public_addr), m_connected(false), m_recovering(false) {
+    m_public_addr(public_addr), m_connected(false), m_recovering(false),
+    m_disable_recovery(false), m_immediate_recovery(false) {
   if (balanced)
     m_state |= RangeServerConnectionFlags::BALANCED;
   m_comm_addr.set_proxy(m_location);
@@ -45,7 +46,8 @@ RangeServerConnection::RangeServerConnection(MetaLog::WriterPtr &mml_writer,
 }
 
 RangeServerConnection::RangeServerConnection(MetaLog::WriterPtr &mml_writer, const MetaLog::EntityHeader &header_)
-  : MetaLog::Entity(header_), m_mml_writer(mml_writer), m_connected(false) {
+  : MetaLog::Entity(header_), m_mml_writer(mml_writer), m_connected(false),
+    m_disable_recovery(false), m_immediate_recovery(false) {
   m_comm_addr.set_proxy(m_location);
 }
 

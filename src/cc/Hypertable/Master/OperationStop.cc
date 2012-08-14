@@ -41,6 +41,11 @@ OperationStop::OperationStop(ContextPtr &context, EventPtr &event)
   m_dependencies.insert(Dependency::INIT);
 }
 
+OperationStop::OperationStop(ContextPtr &context,
+    const MetaLog::EntityHeader &header_)
+  : Operation(context, header_), m_recover(false) {
+}
+
 void OperationStop::execute() {
   HT_INFOF("Entering OperationStop-%s recover=%s state=%s",
           m_server.c_str(), m_recover ? "true" : "false",
@@ -50,8 +55,27 @@ void OperationStop::execute() {
     RangeServerClient rsc(m_context->comm);
     CommAddress addr;
 
+    RangeServerConnectionPtr rscp;
+    if (!m_context->find_server_by_location(m_server, rscp)) {
+      complete_error(Error::RANGESERVER_NOT_FOUND, m_server);
+      return;
+    }
+
+    // send "shutdown" command to this RangeServer
     addr.set_proxy(m_server);
     rsc.shutdown(addr);
+
+    // either trigger immediate recovery or simply remove the
+    // RangeServerConnection from the mml
+    if (!m_recover) {
+      rscp->disable_recovery();
+      HT_INFO_OUT << "delete RangeServerConnection from mml for "
+          << m_server << HT_END;
+      m_context->mml_writer->record_removal(rscp.get());
+      m_context->erase_server(rscp);
+    }
+    else
+      rscp->recover_immediately();
   }
   catch (Exception &e) {
     if (e.code() == Error::COMM_INVALID_PROXY

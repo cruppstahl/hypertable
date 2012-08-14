@@ -48,9 +48,11 @@ namespace Hypertable {
 
   class RangeServerConnection : public MetaLog::Entity {
   public:
-    RangeServerConnection(MetaLog::WriterPtr &mml_writer, const String &location,
-                          const String &hostname, InetAddr public_addr, bool balanced=false);
-    RangeServerConnection(MetaLog::WriterPtr &mml_writer, const MetaLog::EntityHeader &header_);
+    RangeServerConnection(MetaLog::WriterPtr &mml_writer,
+            const String &location, const String &hostname,
+            InetAddr public_addr, bool balanced = false);
+    RangeServerConnection(MetaLog::WriterPtr &mml_writer,
+            const MetaLog::EntityHeader &header_);
     virtual ~RangeServerConnection() { }
 
     bool connected() { ScopedLock lock(m_mutex); return m_connected; }
@@ -76,6 +78,21 @@ namespace Hypertable {
     const String hostname() const { return m_hostname; }
     InetAddr local_addr() const { return m_local_addr; }
     InetAddr public_addr() const { return m_public_addr; }
+
+    void disable_recovery() {
+        ScopedLock lock(m_mutex);
+        m_disable_recovery = true;
+    }
+    bool is_recovery_disabled() const {
+        return m_disable_recovery;
+    }
+    void recover_immediately() {
+        ScopedLock lock(m_mutex);
+        m_immediate_recovery = true;
+    }
+    bool is_recovery_immediately() const {
+        return m_immediate_recovery;
+    }
 
     virtual void display(std::ostream &os);
     virtual size_t encoded_length() const;
@@ -103,6 +120,8 @@ namespace Hypertable {
     InetAddr m_public_addr;
     bool m_connected;
     bool m_recovering;
+    bool m_disable_recovery;
+    bool m_immediate_recovery;
   };
   typedef intrusive_ptr<RangeServerConnection> RangeServerConnectionPtr;
 

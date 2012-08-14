@@ -26,9 +26,7 @@ wait_for_recovery() {
 }
 
 stop_rs1() {
-  echo "shutdown; quit;" | $HT_HOME/bin/ht rsclient localhost:38060
-  sleep 5
-  kill -9 `cat $HT_HOME/run/Hypertable.RangeServer.rs1.pid`
+  echo "KILL rs1; quit;" | $HT_HOME/bin/ht shell --no-prompt
 }
 
 stop_rs2() {

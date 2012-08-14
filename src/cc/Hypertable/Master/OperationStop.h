@@ -29,6 +29,7 @@ namespace Hypertable {
   class OperationStop : public Operation {
   public:
     OperationStop(ContextPtr &context, EventPtr &event);
+    OperationStop(ContextPtr &context, const MetaLog::EntityHeader &header);
     virtual ~OperationStop() { }
 
     virtual void execute();

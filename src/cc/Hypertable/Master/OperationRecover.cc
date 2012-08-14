@@ -319,11 +319,13 @@ bool OperationRecover::acquire_server_lock() {
 
   // need to wait for long enough to be certain that the RS has failed
   // before trying to acquire lock
-  if (get_state() == OperationState::INITIAL) {
-    if (!proceed_with_recovery())
-      return false;
-    else if (m_waiting)
-      return true;
+  if (!m_rsc->is_recovery_immediately()) {
+    if (get_state() == OperationState::INITIAL) {
+      if (!proceed_with_recovery())
+        return false;
+      else if (m_waiting)
+        return true;
+    }
   }
 
   m_hyperspace_handle =

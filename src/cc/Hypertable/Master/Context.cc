@@ -44,7 +44,7 @@ class RecoverySessionCallback : public Hyperspace::HandleCallback {
     virtual void lock_released() {
       RangeServerConnectionPtr rsc;
       if (m_context->find_server_by_location(m_rs, rsc)) {
-        if (m_context->disconnect_server(rsc)) {
+        if (m_context->disconnect_server(rsc) && !rsc->is_recovery_disabled()) {
           HT_INFOF("RangeServer %s lost its hyperspace lock; starting recovery",
                 rsc->location().c_str());
           OperationPtr operation = new OperationRecover(m_context, rsc);
@@ -344,7 +344,8 @@ bool Context::disconnect_server(RangeServerConnectionPtr &rsc) {
 
   HT_INFOF("Unregistering proxy %s", rsc->location().c_str());
 
-  RecoveryState::HandleMap::iterator it = m_recovery_state.m_hyperspace_handles.find(rsc->location());
+  RecoveryState::HandleMap::iterator it =
+      m_recovery_state.m_hyperspace_handles.find(rsc->location());
   if (it != m_recovery_state.m_hyperspace_handles.end()) {
     hyperspace->close_nowait((*it).second);
     m_recovery_state.m_hyperspace_handles.erase(it);

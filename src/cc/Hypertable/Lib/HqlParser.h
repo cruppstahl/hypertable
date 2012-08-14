@@ -104,6 +104,7 @@ namespace Hypertable {
       COMMAND_COMPACT,
       COMMAND_METADATA_SYNC,
       COMMAND_STOP,
+      COMMAND_KILL,
       COMMAND_MAX
     };
 
@@ -1888,6 +1889,7 @@ namespace Hypertable {
           Token ESC_HELP     = as_lower_d["\\h"];
           Token SELECT       = as_lower_d["select"];
           Token STOP         = as_lower_d["stop"];
+          Token KILL         = as_lower_d["kill"];
           Token START_TIME   = as_lower_d["start_time"];
           Token END_TIME     = as_lower_d["end_time"];
           Token FROM         = as_lower_d["from"];
@@ -2067,10 +2069,15 @@ namespace Hypertable {
             | compact_statement[set_command(self.state, COMMAND_COMPACT)]
             | metadata_sync_statement[set_command(self.state, COMMAND_METADATA_SYNC)]
             | stop_statement[set_command(self.state, COMMAND_STOP)]
+            | kill_statement[set_command(self.state, COMMAND_KILL)]
             ;
 
           stop_statement
             = STOP >> user_identifier[set_rangeserver(self.state)]
+            ;
+
+          kill_statement
+            = KILL >> user_identifier[set_rangeserver(self.state)]
             ;
 
           metadata_sync_statement
@@ -2785,6 +2792,7 @@ namespace Hypertable {
           BOOST_SPIRIT_DEBUG_RULE(metadata_sync_statement);
           BOOST_SPIRIT_DEBUG_RULE(metadata_sync_option_spec);
           BOOST_SPIRIT_DEBUG_RULE(stop_statement);
+          BOOST_SPIRIT_DEBUG_RULE(kill_statement);
           BOOST_SPIRIT_DEBUG_RULE(range_type);
 #endif
         }
@@ -2829,7 +2837,7 @@ namespace Hypertable {
           balance_statement, range_move_spec_list, range_move_spec,
           balance_option_spec, heapcheck_statement, compact_statement,
           metadata_sync_statement, metadata_sync_option_spec, stop_statement,
-          range_type;
+          kill_statement, range_type;
       };
 
       ParserState &state;
