@@ -27,7 +27,7 @@
 
 using namespace Hypertable;
 
-OperationCollectGarbage::OperationCollectGarbage(ContextPtr &context)
+OperationCollectGarbage::OperationCollectGarbage(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_COLLECT_GARBAGE) {
   m_dependencies.insert(Dependency::INIT);
   m_dependencies.insert(Dependency::METADATA);

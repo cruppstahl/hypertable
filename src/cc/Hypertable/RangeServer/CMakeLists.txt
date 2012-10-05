@@ -209,4 +209,7 @@ if (NOT HT_COMPONENT_INSTALL)
           RUNTIME DESTINATION bin
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib)
+
+  install(FILES MetaLogEntityRange.h MetaLogDefinitionRangeServer.h
+       DESTINATION include/Hypertable/RangeServer)
 endif ()

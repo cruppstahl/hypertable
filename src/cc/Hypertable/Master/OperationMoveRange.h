@@ -28,12 +28,12 @@ namespace Hypertable {
 
   class OperationMoveRange : public Operation {
   public:
-    OperationMoveRange(ContextPtr &context, const String &source,
+    OperationMoveRange(Context *context, const String &source,
 		       const TableIdentifier &table, const RangeSpec &range,
 		       const String &transfer_log, uint64_t soft_limit,
 		       bool is_split);
-    OperationMoveRange(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationMoveRange(ContextPtr &context, EventPtr &event);
+    OperationMoveRange(Context *context, const MetaLog::EntityHeader &header_);
+    OperationMoveRange(Context *context, EventPtr &event);
     virtual ~OperationMoveRange() { }
 
     void initialize_dependencies();

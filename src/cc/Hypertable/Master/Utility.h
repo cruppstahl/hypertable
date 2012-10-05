@@ -32,23 +32,23 @@ namespace Hypertable {
 
   namespace Utility {
 
-    extern void get_table_server_set(ContextPtr &context, const String &id, StringSet &servers);
-    extern bool table_exists(ContextPtr &context, const String &name, String &id);
-    extern bool table_exists(ContextPtr &context, const String &id);
-    extern void verify_table_name_availability(ContextPtr &context, const String &name, String &id);
-    extern void create_table_in_hyperspace(ContextPtr &context, const String &name,
+    extern void get_table_server_set(Context *context, const String &id, StringSet &servers);
+    extern bool table_exists(Context *context, const String &name, String &id);
+    extern bool table_exists(Context *context, const String &id);
+    extern void verify_table_name_availability(Context *context, const String &name, String &id);
+    extern void create_table_in_hyperspace(Context *context, const String &name,
                                            const String &schema_str, TableIdentifierManaged *table);
-    extern void prepare_index(ContextPtr &context, const String &name,
+    extern void prepare_index(Context *context, const String &name,
                               const String &schema_str, bool qualifier,
                               String &index_name, String &index_schema);
-    extern void create_table_write_metadata(ContextPtr &context, TableIdentifier *table);
-    extern bool next_available_server(ContextPtr &context, String &location);
-    extern void create_table_load_range(ContextPtr &context, const String &location,
+    extern void create_table_write_metadata(Context *context, TableIdentifier *table);
+    extern bool next_available_server(Context *context, String &location);
+    extern void create_table_load_range(Context *context, const String &location,
                                         TableIdentifier *table, RangeSpec &range,
                                         bool needs_compaction);
     extern int64_t range_hash_code(const TableIdentifier &table, const RangeSpec &range, const String &qualifier);
     extern String range_hash_string(const TableIdentifier &table, const RangeSpec &range, const String &qualifier);
-    extern String root_range_location(ContextPtr &context);
+    extern String root_range_location(Context *context);
 
   } // namespace Utility
 

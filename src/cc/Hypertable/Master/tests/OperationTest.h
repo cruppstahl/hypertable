@@ -33,10 +33,10 @@ namespace Hypertable {
 
   class OperationTest : public Operation {
   public:
-    OperationTest(ContextPtr &context, std::vector<String> &results,
+    OperationTest(Context *context, std::vector<String> &results,
                   const String &name, DependencySet &dependencies,
                   DependencySet &exclusivities, DependencySet &obstructions);
-    OperationTest(ContextPtr &context, std::vector<String> &results,
+    OperationTest(Context *context, std::vector<String> &results,
                   const String &name, int32_t state);
 
     virtual ~OperationTest() { }

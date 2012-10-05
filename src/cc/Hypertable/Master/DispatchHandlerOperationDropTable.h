@@ -30,7 +30,7 @@ namespace Hypertable {
 
   class DispatchHandlerOperationDropTable : public DispatchHandlerOperation {
   public:
-    DispatchHandlerOperationDropTable(ContextPtr &context, const TableIdentifier &table) :
+    DispatchHandlerOperationDropTable(Context *context, const TableIdentifier &table) :
       DispatchHandlerOperation(context), m_table(table) { }
     virtual void start(const String &location) {
       CommAddress addr;

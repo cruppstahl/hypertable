@@ -29,7 +29,7 @@ namespace Hypertable {
 
   class OperationStatus : public Operation {
   public:
-    OperationStatus(ContextPtr &context, EventPtr &event);
+    OperationStatus(Context *context, EventPtr &event);
     virtual ~OperationStatus() { }
 
     virtual void execute();

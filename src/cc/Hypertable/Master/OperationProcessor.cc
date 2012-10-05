@@ -34,7 +34,7 @@ using namespace Hypertable;
 using namespace boost;
 
 
-OperationProcessor::ThreadContext::ThreadContext(ContextPtr &mctx)
+OperationProcessor::ThreadContext::ThreadContext(Context *mctx)
   : master_context(mctx), current_blocked(0), busy_count(0),
     need_order_recompute(false), shutdown(false), paused(false) {
   current_iter = current.end();
@@ -45,7 +45,7 @@ OperationProcessor::ThreadContext::~ThreadContext() {
 }
 
 
-OperationProcessor::OperationProcessor(ContextPtr &context, size_t thread_count) 
+OperationProcessor::OperationProcessor(Context *context, size_t thread_count) 
   : m_context(context) {
   m_context.execution_order_iter = m_context.execution_order.end();
   m_context.op = this;

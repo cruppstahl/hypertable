@@ -46,7 +46,7 @@ namespace Hypertable {
    */
   class OperationProcessor : public ReferenceCount {
   public:
-    OperationProcessor(ContextPtr &context, size_t thread_count);
+    OperationProcessor(Context *context, size_t thread_count);
     void add_operation(OperationPtr &operation);
     void add_operations(std::vector<OperationPtr> &operations);
     void shutdown();
@@ -127,13 +127,13 @@ namespace Hypertable {
 
     class ThreadContext {
     public:
-      ThreadContext(ContextPtr &mctx);
+      ThreadContext(Context *mctx);
       ~ThreadContext();
       Mutex mutex;
       boost::condition cond;
       boost::condition idle_cond;
       OperationProcessor *op;
-      ContextPtr &master_context;
+      Context *master_context;
       OperationGraph graph;
       VertexSet current_active;
       size_t current_blocked;

@@ -28,8 +28,8 @@ namespace Hypertable {
 
   class OperationSystemUpgrade : public Operation {
   public:
-    OperationSystemUpgrade(ContextPtr &context);
-    OperationSystemUpgrade(ContextPtr &context, const MetaLog::EntityHeader &header_);
+    OperationSystemUpgrade(Context *context);
+    OperationSystemUpgrade(Context *context, const MetaLog::EntityHeader &header_);
     virtual ~OperationSystemUpgrade() { }
 
     bool update_schema(const String &name, const String &schema_file);

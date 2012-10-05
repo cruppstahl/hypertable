@@ -30,9 +30,9 @@ namespace Hypertable {
 
   class OperationDropTable : public Operation {
   public:
-    OperationDropTable(ContextPtr &context, const String &name, bool if_exists);
-    OperationDropTable(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationDropTable(ContextPtr &context, EventPtr &event);
+    OperationDropTable(Context *context, const String &name, bool if_exists);
+    OperationDropTable(Context *context, const MetaLog::EntityHeader &header_);
+    OperationDropTable(Context *context, EventPtr &event);
     virtual ~OperationDropTable() { }
 
     virtual void execute();

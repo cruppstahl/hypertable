@@ -35,7 +35,7 @@ extern "C" {
 
 using namespace Hypertable;
 
-OperationGatherStatistics::OperationGatherStatistics(ContextPtr &context)
+OperationGatherStatistics::OperationGatherStatistics(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_GATHER_STATISTICS) {
   m_dependencies.insert(Dependency::INIT);
   m_dependencies.insert(Dependency::METADATA);

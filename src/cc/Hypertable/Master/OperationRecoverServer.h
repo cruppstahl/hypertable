@@ -29,7 +29,7 @@ namespace Hypertable {
 
   class OperationRecoverServer : public Operation {
   public:
-    OperationRecoverServer(ContextPtr &context, RangeServerConnectionPtr &rsc);
+    OperationRecoverServer(Context *context, RangeServerConnectionPtr &rsc);
     virtual ~OperationRecoverServer() { }
 
     virtual void execute();

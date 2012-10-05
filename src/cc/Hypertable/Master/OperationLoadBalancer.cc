@@ -28,13 +28,13 @@
 
 using namespace Hypertable;
 
-OperationLoadBalancer::OperationLoadBalancer(ContextPtr &context)
+OperationLoadBalancer::OperationLoadBalancer(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_LOAD_BALANCER) {
   m_plan = new BalancePlan();
   initialize_dependencies();
 }
 
-OperationLoadBalancer::OperationLoadBalancer(ContextPtr &context, EventPtr &event)
+OperationLoadBalancer::OperationLoadBalancer(Context *context, EventPtr &event)
   : Operation(context, event, MetaLog::EntityType::OPERATION_LOAD_BALANCER) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

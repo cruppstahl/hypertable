@@ -39,7 +39,7 @@ const char *Dependency::SYSTEM = "SYSTEM";
 
 const char *OperationState::get_text(int32_t state);
 
-Operation::Operation(ContextPtr &context, int32_t type)
+Operation::Operation(Context *context, int32_t type)
   : MetaLog::Entity(type), m_context(context), m_state(OperationState::INITIAL),
     m_error(0), m_remove_approvals(0), m_original_type(0), m_blocked(false) {
   int32_t timeout = m_context->props->get_i32("Hypertable.Request.Timeout");
@@ -48,7 +48,7 @@ Operation::Operation(ContextPtr &context, int32_t type)
   m_hash_code = (int64_t)header.id;
 }
 
-Operation::Operation(ContextPtr &context, EventPtr &event, int32_t type)
+Operation::Operation(Context *context, EventPtr &event, int32_t type)
   : MetaLog::Entity(type), m_context(context), m_event(event), m_state(OperationState::INITIAL),
     m_error(0), m_remove_approvals(0), m_original_type(0), m_blocked(false) {
   m_expiration_time.sec = time(0) + m_event->header.timeout_ms/1000;
@@ -56,7 +56,7 @@ Operation::Operation(ContextPtr &context, EventPtr &event, int32_t type)
   m_hash_code = (int64_t)header.id;
 }
 
-Operation::Operation(ContextPtr &context, const MetaLog::EntityHeader &header_)
+Operation::Operation(Context *context, const MetaLog::EntityHeader &header_)
   : MetaLog::Entity(header_), m_context(context), m_state(OperationState::INITIAL),
     m_error(0), m_remove_approvals(0), m_original_type(0), m_blocked(false) {
   m_hash_code = (int64_t)header.id;

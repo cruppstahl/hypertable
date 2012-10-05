@@ -33,7 +33,7 @@ extern "C" {
 using namespace Hypertable;
 using namespace std;
 
-GcWorker::GcWorker(ContextPtr &context) : m_context(context) {
+GcWorker::GcWorker(Context *context) : m_context(context) {
   m_tables_dir = context->props->get_str("Hypertable.Directory");
   boost::trim_if(m_tables_dir, boost::is_any_of("/"));
   m_tables_dir = String("/") + m_tables_dir + "/tables/";

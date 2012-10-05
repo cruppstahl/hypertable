@@ -38,17 +38,17 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationAlterTable::OperationAlterTable(ContextPtr &context, const String &name, const String &schema)
+OperationAlterTable::OperationAlterTable(Context *context, const String &name, const String &schema)
   : Operation(context, MetaLog::EntityType::OPERATION_ALTER_TABLE), m_name(name), m_schema(schema) {
   initialize_dependencies();
 }
 
-OperationAlterTable::OperationAlterTable(ContextPtr &context,
+OperationAlterTable::OperationAlterTable(Context *context,
                                          const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationAlterTable::OperationAlterTable(ContextPtr &context, EventPtr &event) 
+OperationAlterTable::OperationAlterTable(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_ALTER_TABLE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

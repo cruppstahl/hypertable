@@ -32,18 +32,18 @@
 using namespace Hypertable;
 
 
-OperationDropNamespace::OperationDropNamespace(ContextPtr &context, const String &name, bool if_exists)
+OperationDropNamespace::OperationDropNamespace(Context *context, const String &name, bool if_exists)
   : Operation(context, MetaLog::EntityType::OPERATION_DROP_NAMESPACE), m_name(name) {
   m_flags = (if_exists) ? NamespaceFlag::IF_EXISTS : 0;
   initialize_dependencies();
 }
 
-OperationDropNamespace::OperationDropNamespace(ContextPtr &context,
+OperationDropNamespace::OperationDropNamespace(Context *context,
                                                const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationDropNamespace::OperationDropNamespace(ContextPtr &context, EventPtr &event) 
+OperationDropNamespace::OperationDropNamespace(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_DROP_NAMESPACE), m_flags(0) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

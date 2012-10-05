@@ -34,17 +34,17 @@ using namespace Hypertable;
 using namespace Hyperspace;
 
 
-OperationGetSchema::OperationGetSchema(ContextPtr &context, const String &name)
+OperationGetSchema::OperationGetSchema(Context *context, const String &name)
   : Operation(context, MetaLog::EntityType::OPERATION_GET_SCHEMA), m_name(name) {
   initialize_dependencies();
 }
 
-OperationGetSchema::OperationGetSchema(ContextPtr &context,
+OperationGetSchema::OperationGetSchema(Context *context,
                                        const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationGetSchema::OperationGetSchema(ContextPtr &context, EventPtr &event) 
+OperationGetSchema::OperationGetSchema(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_GET_SCHEMA) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

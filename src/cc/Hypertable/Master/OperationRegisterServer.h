@@ -29,7 +29,7 @@ namespace Hypertable {
 
   class OperationRegisterServer : public Operation {
   public:
-    OperationRegisterServer(ContextPtr &context, EventPtr &event);
+    OperationRegisterServer(Context *context, EventPtr &event);
     virtual ~OperationRegisterServer() { }
 
     virtual void execute();

@@ -31,11 +31,11 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationSystemUpgrade::OperationSystemUpgrade(ContextPtr &context)
+OperationSystemUpgrade::OperationSystemUpgrade(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_SYSTEM_UPGRADE) {
 }
 
-OperationSystemUpgrade::OperationSystemUpgrade(ContextPtr &context,
+OperationSystemUpgrade::OperationSystemUpgrade(Context *context,
                                                const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }

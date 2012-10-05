@@ -34,7 +34,7 @@ using namespace Hypertable;
 /**
  *
  */
-DispatchHandlerOperation::DispatchHandlerOperation(ContextPtr &context)
+DispatchHandlerOperation::DispatchHandlerOperation(Context *context)
   : m_context(context), m_rsclient(context->comm), m_outstanding(0), m_error_count(0) {
 }
 

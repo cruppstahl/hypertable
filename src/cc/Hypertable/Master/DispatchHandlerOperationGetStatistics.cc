@@ -29,7 +29,7 @@
 
 using namespace Hypertable;
 
-DispatchHandlerOperationGetStatistics::DispatchHandlerOperationGetStatistics(ContextPtr &context) :
+DispatchHandlerOperationGetStatistics::DispatchHandlerOperationGetStatistics(Context *context) :
   DispatchHandlerOperation(context), m_timer(context->props->get_i32("Hypertable.Monitoring.Interval")) {
 }
 

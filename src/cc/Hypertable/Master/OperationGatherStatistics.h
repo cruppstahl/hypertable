@@ -30,7 +30,7 @@ namespace Hypertable {
 
   class OperationGatherStatistics : public Operation {
   public:
-    OperationGatherStatistics(ContextPtr &context);
+    OperationGatherStatistics(Context *context);
     virtual ~OperationGatherStatistics() { }
 
     virtual void execute();

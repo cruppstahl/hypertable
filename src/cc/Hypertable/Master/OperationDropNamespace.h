@@ -28,9 +28,9 @@ namespace Hypertable {
 
   class OperationDropNamespace : public Operation {
   public:
-    OperationDropNamespace(ContextPtr &context, const String &name, bool if_exists);
-    OperationDropNamespace(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationDropNamespace(ContextPtr &context, EventPtr &event);
+    OperationDropNamespace(Context *context, const String &name, bool if_exists);
+    OperationDropNamespace(Context *context, const MetaLog::EntityHeader &header_);
+    OperationDropNamespace(Context *context, EventPtr &event);
     virtual ~OperationDropNamespace() { }
 
     virtual void execute();

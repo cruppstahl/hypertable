@@ -38,17 +38,17 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationDropTable::OperationDropTable(ContextPtr &context, const String &name, bool if_exists)
+OperationDropTable::OperationDropTable(Context *context, const String &name, bool if_exists)
   : Operation(context, MetaLog::EntityType::OPERATION_DROP_TABLE), m_name(name), m_if_exists(if_exists) {
   initialize_dependencies();
 }
 
-OperationDropTable::OperationDropTable(ContextPtr &context,
+OperationDropTable::OperationDropTable(Context *context,
                                        const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationDropTable::OperationDropTable(ContextPtr &context, EventPtr &event) 
+OperationDropTable::OperationDropTable(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_DROP_TABLE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

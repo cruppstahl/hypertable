@@ -34,7 +34,7 @@ namespace Hypertable {
 
   class DispatchHandlerOperationGetStatistics : public DispatchHandlerOperation {
   public:
-    DispatchHandlerOperationGetStatistics(ContextPtr &context);
+    DispatchHandlerOperationGetStatistics(Context *context);
     void initialize(std::vector<RangeServerStatistics> &results);
     virtual void start(const String &location);
     virtual void result_callback(EventPtr &event);

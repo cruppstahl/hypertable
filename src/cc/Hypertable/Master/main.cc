@@ -69,7 +69,7 @@ namespace {
 
   class HandlerFactory : public ConnectionHandlerFactory {
   public:
-    HandlerFactory(ContextPtr &context) : m_context(context) {
+    HandlerFactory(Context *context) : m_context(context) {
       m_handler = new ConnectionHandler(m_context);
     }
 
@@ -78,7 +78,7 @@ namespace {
     }
 
   private:
-    ContextPtr m_context;
+    Context *m_context;
     DispatchHandlerPtr m_handler;
   };
 
@@ -91,11 +91,10 @@ namespace {
 
 } // local namespace
 
-
-void obtain_master_lock(ContextPtr &context);
+void obtain_master_lock(Context *context);
 
 int main(int argc, char **argv) {
-  ContextPtr context = new Context();
+  Context context;
 
   // Register ourselves as the Comm-layer proxy master
   ReactorFactory::proxy_master = true;
@@ -104,14 +103,14 @@ int main(int argc, char **argv) {
     init_with_policies<Policies>(argc, argv);
     uint16_t port = get_i16("port");
 
-    context->comm = Comm::instance();
-    context->conn_manager = new ConnectionManager(context->comm);
-    context->props = properties;
-    context->hyperspace = new Hyperspace::Session(context->comm, context->props);
+    context.comm = Comm::instance();
+    context.conn_manager = new ConnectionManager(context.comm);
+    context.props = properties;
+    context.hyperspace = new Hyperspace::Session(context.comm, context.props);
 
-    context->toplevel_dir = properties->get_str("Hypertable.Directory");
-    boost::trim_if(context->toplevel_dir, boost::is_any_of("/"));
-    context->toplevel_dir = String("/") + context->toplevel_dir;
+    context.toplevel_dir = properties->get_str("Hypertable.Directory");
+    boost::trim_if(context.toplevel_dir, boost::is_any_of("/"));
+    context.toplevel_dir = String("/") + context.toplevel_dir;
 
     // the "state-file" signals that we're currently acquiring the hyperspace
     // lock; it is required for the serverup tool (issue 816)
@@ -121,34 +120,35 @@ int main(int argc, char **argv) {
     if (FileUtils::write(state_file, state_text) < 0)
       HT_INFOF("Unable to write state file %s", state_file.c_str());
 
-    obtain_master_lock(context);
+    obtain_master_lock(&context);
 
     if (!FileUtils::unlink(state_file))
       HT_INFOF("Unable to delete state file %s", state_file.c_str());
 
-    context->namemap = new NameIdMapper(context->hyperspace, context->toplevel_dir);
-    context->dfs = new DfsBroker::Client(context->conn_manager, context->props);
-    context->mml_definition =
-        new MetaLog::DefinitionMaster(context, format("%s_%u", "master", port).c_str());
-    context->monitoring = new Monitoring(properties, context->namemap);
-    context->request_timeout = (time_t)(context->props->get_i32("Hypertable.Request.Timeout") / 1000);
+    context.namemap = new NameIdMapper(context.hyperspace,
+            context.toplevel_dir);
+    context.dfs = new DfsBroker::Client(context.conn_manager, context.props);
+    context.mml_definition = new MetaLog::DefinitionMaster(&context,
+                format("%s_%u", "master", port).c_str());
+    context.monitoring = new Monitoring(properties, context.namemap);
+    context.request_timeout = (time_t)(context.props->get_i32("Hypertable.Request.Timeout") / 1000);
 
     if (get_bool("Hypertable.Master.Locations.IncludeMasterHash")) {
       char location_hash[33];
       md5_string(format("%s:%u", System::net_info().host_name.c_str(), port).c_str(), location_hash);
-      context->location_hash = String(location_hash).substr(0, 8);
+      context.location_hash = String(location_hash).substr(0, 8);
     }
-    context->max_allowable_skew = context->props->get_i32("Hypertable.RangeServer.ClockSkew.Max");
-    context->monitoring_interval = context->props->get_i32("Hypertable.Monitoring.Interval");
-    context->gc_interval = context->props->get_i32("Hypertable.Master.Gc.Interval");
-    context->timer_interval = std::min(context->monitoring_interval, context->gc_interval);
+    context.max_allowable_skew = context.props->get_i32("Hypertable.RangeServer.ClockSkew.Max");
+    context.monitoring_interval = context.props->get_i32("Hypertable.Monitoring.Interval");
+    context.gc_interval = context.props->get_i32("Hypertable.Master.Gc.Interval");
+    context.timer_interval = std::min(context.monitoring_interval, context.gc_interval);
 
-    HT_ASSERT(context->monitoring_interval > 1000);
-    HT_ASSERT(context->gc_interval > 1000);
+    HT_ASSERT(context.monitoring_interval > 1000);
+    HT_ASSERT(context.gc_interval > 1000);
 
     time_t now = time(0);
-    context->next_monitoring_time = now + (context->monitoring_interval/1000) - 1;
-    context->next_gc_time = now + (context->gc_interval/1000) - 1;
+    context.next_monitoring_time = now + (context.monitoring_interval/1000) - 1;
+    context.next_gc_time = now + (context.gc_interval/1000) - 1;
 
     if (has("induce-failure")) {
       if (FailureInducer::instance == 0)
@@ -164,9 +164,11 @@ int main(int argc, char **argv) {
     MetaLog::ReaderPtr mml_reader;
     OperationPtr operation;
     RangeServerConnectionPtr rsc;
-    String log_dir = context->toplevel_dir + "/servers/master/log/" + context->mml_definition->name();
+    String log_dir = context.toplevel_dir + "/servers/master/log/"
+        + context.mml_definition->name();
 
-    mml_reader = new MetaLog::Reader(context->dfs, context->mml_definition, log_dir);
+    mml_reader = new MetaLog::Reader(context.dfs,
+            context.mml_definition, log_dir);
     mml_reader->get_entities(entities);
 
     // Uniq-ify the RangeServerConnection objects
@@ -190,93 +192,90 @@ int main(int argc, char **argv) {
       entities.swap(entities2);
     }
 
-    context->mml_writer = new MetaLog::Writer(context->dfs, context->mml_definition,
-                                              log_dir, entities);
+    context.mml_writer = new MetaLog::Writer(context.dfs,
+            context.mml_definition, log_dir, entities);
 
-    context->reference_manager = new ReferenceManager();
+    context.reference_manager = new ReferenceManager();
 
     /** Response Manager */
-    ResponseManagerContext *rmctx = new ResponseManagerContext(context->mml_writer);
-    context->response_manager = new ResponseManager(rmctx);
-    Thread response_manager_thread(*context->response_manager);
+    ResponseManagerContext *rmctx = new ResponseManagerContext(context.mml_writer);
+    context.response_manager = new ResponseManager(rmctx);
+    Thread response_manager_thread(*context.response_manager);
 
     int worker_count  = get_i32("workers");
-    context->op = new OperationProcessor(context, worker_count);
-    context->balancer = new LoadBalancerBasic(context);
+    context.op = new OperationProcessor(&context, worker_count);
+    context.balancer = new LoadBalancerBasic(&context);
 
     // First do System Upgrade
-    operation = new OperationSystemUpgrade(context);
-    context->op->add_operation(operation);
-    context->op->wait_for_empty();
+    operation = new OperationSystemUpgrade(&context);
+    context.op->add_operation(operation);
+    context.op->wait_for_empty();
 
     // Then reconstruct state and start execution
-    context->op_balance = NULL;
+    context.op_balance = NULL;
     for (size_t i=0; i<entities.size(); i++) {
       operation = dynamic_cast<Operation *>(entities[i].get());
       if (operation) {
         if (operation->remove_explicitly())
-          context->reference_manager->add(operation);
+          context.reference_manager->add(operation);
         if (dynamic_cast<OperationBalance *>(operation.get())) {
           // there should be only one OPERATION_BALANCE
-          HT_ASSERT(context->op_balance == NULL);
-          context->op_balance = dynamic_cast<OperationBalance *>(operation.get());
+          HT_ASSERT(context.op_balance == NULL);
+          context.op_balance = dynamic_cast<OperationBalance *>(operation.get());
         }
         operations.push_back(operation);
       }
       else {
         rsc = dynamic_cast<RangeServerConnection *>(entities[i].get());
-        rsc->set_mml_writer(context->mml_writer);
-        context->add_server(rsc);
+        rsc->set_mml_writer(context.mml_writer);
+        context.add_server(rsc);
         HT_ASSERT(rsc);
-        operations.push_back( new OperationRecoverServer(context, rsc) );
+        operations.push_back(new OperationRecoverServer(&context, rsc));
       }
     }
     if (operations.empty()) {
-      OperationInitializePtr init_op = new OperationInitialize(context);
-      if (context->namemap->exists_mapping("/sys/METADATA", 0))
+      OperationInitializePtr init_op = new OperationInitialize(&context);
+      if (context.namemap->exists_mapping("/sys/METADATA", 0))
         init_op->set_state(OperationState::CREATE_RS_METRICS);
-      context->reference_manager->add(init_op.get());
-      operations.push_back( init_op );
+      context.reference_manager->add(init_op.get());
+      operations.push_back(init_op);
     }
     else {
-      context->in_operation = true;
-      if (context->metadata_table == 0)
-        context->metadata_table = new Table(context->props, context->conn_manager,
-                                            context->hyperspace, context->namemap,
-                                            TableIdentifier::METADATA_NAME);
+      context.in_operation = true;
+      if (context.metadata_table == 0)
+        context.metadata_table = new Table(context.props, context.conn_manager,
+                context.hyperspace, context.namemap,
+                TableIdentifier::METADATA_NAME);
 
-      if (context->rs_metrics_table == 0)
-        context->rs_metrics_table = new Table(context->props, context->conn_manager,
-                                              context->hyperspace, context->namemap,
-                                              "sys/RS_METRICS");
+      if (context.rs_metrics_table == 0)
+        context.rs_metrics_table = new Table(context.props,
+                context.conn_manager, context.hyperspace, context.namemap,
+                "sys/RS_METRICS");
     }
 
     // Add PERPETUAL operations
-    operation = new OperationWaitForServers(context);
+    operation = new OperationWaitForServers(&context);
     operations.push_back(operation);
-    if (!context->op_balance) {
-      operation = new OperationBalance(context);
-      context->op_balance = dynamic_cast<OperationBalance *>(operation.get());
+    if (!context.op_balance) {
+      operation = new OperationBalance(&context);
+      context.op_balance = dynamic_cast<OperationBalance *>(operation.get());
       operations.push_back(operation);
     }
 
-    context->op->add_operations(operations);
+    context.op->add_operations(operations);
 
-    ConnectionHandlerFactoryPtr hf(new HandlerFactory(context));
+    ConnectionHandlerFactoryPtr hf(new HandlerFactory(&context));
     InetAddr listen_addr(INADDR_ANY, port);
 
-    context->comm->listen(listen_addr, hf);
+    context.comm->listen(listen_addr, hf);
 
-    context->op->join();
-    context->mml_writer->close();
-    context->comm->close_socket(listen_addr);
+    context.op->join();
+    context.mml_writer->close();
+    context.comm->close_socket(listen_addr);
 
-    context->response_manager->shutdown();
+    context.response_manager->shutdown();
     response_manager_thread.join();
     delete rmctx;
-    delete context->response_manager;
-
-    context = 0;
   }
   catch (Exception &e) {
     HT_ERROR_OUT << e << HT_END;
@@ -288,7 +287,7 @@ int main(int argc, char **argv) {
 
 using namespace Hyperspace;
 
-void obtain_master_lock(ContextPtr &context) {
+void obtain_master_lock(Context *context) {
 
   try {
     uint64_t handle = 0;

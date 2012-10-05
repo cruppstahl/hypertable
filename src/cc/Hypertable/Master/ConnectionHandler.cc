@@ -62,7 +62,8 @@ using namespace Error;
 /**
  *
  */
-ConnectionHandler::ConnectionHandler(ContextPtr &context) : m_context(context), m_shutdown(false) {
+ConnectionHandler::ConnectionHandler(Context *context)
+    : m_context(context), m_shutdown(false) {
   int error;
   if ((error = m_context->comm->set_timer(context->timer_interval, this)) != Error::OK)
     HT_FATALF("Problem setting timer - %s", Error::get_text(error));

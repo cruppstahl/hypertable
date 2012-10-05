@@ -33,7 +33,6 @@
 
 #include "Common/Filesystem.h"
 #include "Common/Properties.h"
-#include "Common/ReferenceCount.h"
 #include "Common/StringExt.h"
 
 #include "AsyncComm/Comm.h"
@@ -60,7 +59,7 @@ namespace Hypertable {
   class ResponseManager;
   class ReferenceManager;
 
-  class Context : public ReferenceCount {
+  class Context {
   public:
     Context()
       : timer_interval(0), monitoring_interval(0), gc_interval(0),
@@ -197,7 +196,6 @@ namespace Hypertable {
     ServerList m_server_list;
     ServerList::iterator m_server_list_iter;
   };
-  typedef intrusive_ptr<Context> ContextPtr;
 
 } // namespace Hypertable
 

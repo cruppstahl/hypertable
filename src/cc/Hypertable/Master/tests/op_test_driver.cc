@@ -91,7 +91,7 @@ namespace {
   typedef Meta::list<GenericServerPolicy, DfsClientPolicy,
                      HyperspaceClientPolicy, DefaultCommPolicy, AppPolicy> Policies;
 
-  void initialize_test(ContextPtr &context, const String &log_dir,
+  void initialize_test(Context *context, const String &log_dir,
                        std::vector<MetaLog::EntityPtr> &entities,
                        const String &failure_point) {
     OperationPtr operation;
@@ -116,7 +116,7 @@ namespace {
   typedef std::multimap<String, int32_t> ExpectedResultsMap;
 
 
-  void run_test(ContextPtr &context, const String &log_dir,
+  void run_test(Context *context, const String &log_dir,
                 std::vector<MetaLog::EntityPtr> &entities,
                 const String &failure_point,
                 ExpectedResultsMap &expected_operations,
@@ -217,75 +217,74 @@ namespace {
 
 } // local namespace
 
-void create_namespace_test(ContextPtr &context);
-void drop_namespace_test(ContextPtr &context);
-void create_table_test(ContextPtr &context);
-void create_table_with_index_test(ContextPtr &context);
-void rename_table_test(ContextPtr &context);
-void master_initialize_test(ContextPtr &context);
-void system_upgrade_test(ContextPtr &context);
-void move_range_test(ContextPtr &context);
-
+void create_namespace_test(Context *context);
+void drop_namespace_test(Context *context);
+void create_table_test(Context *context);
+void create_table_with_index_test(Context *context);
+void rename_table_test(Context *context);
+void master_initialize_test(Context *context);
+void system_upgrade_test(Context *context);
+void move_range_test(Context *context);
 
 int main(int argc, char **argv) {
-  ContextPtr context = new Context();
+  Context context;
   std::vector<MetaLog::EntityPtr> entities;
 
   // Register ourselves as the Comm-layer proxy master
   ReactorFactory::proxy_master = true;
 
-  context->test_mode = true;
+  context.test_mode = true;
 
   try {
     init_with_policies<Policies>(argc, argv);
 
-    context->comm = Comm::instance();
-    context->conn_manager = new ConnectionManager(context->comm);
-    context->props = properties;
-    context->hyperspace = new Hyperspace::Session(context->comm, context->props);
-    context->dfs = new DfsBroker::Client(context->conn_manager, context->props);
+    context.comm = Comm::instance();
+    context.conn_manager = new ConnectionManager(context.comm);
+    context.props = properties;
+    context.hyperspace = new Hyperspace::Session(context.comm, context.props);
+    context.dfs = new DfsBroker::Client(context.conn_manager, context.props);
 
-    context->toplevel_dir = properties->get_str("Hypertable.Directory");
-    boost::trim_if(context->toplevel_dir, boost::is_any_of("/"));
-    context->toplevel_dir = String("/") + context->toplevel_dir;
-    context->namemap = new NameIdMapper(context->hyperspace, context->toplevel_dir);
-    context->monitoring = new Monitoring(context->props, context->namemap);
+    context.toplevel_dir = properties->get_str("Hypertable.Directory");
+    boost::trim_if(context.toplevel_dir, boost::is_any_of("/"));
+    context.toplevel_dir = String("/") + context.toplevel_dir;
+    context.namemap = new NameIdMapper(context.hyperspace, context.toplevel_dir);
+    context.monitoring = new Monitoring(context.props, context.namemap);
 
-    context->mml_definition = new MetaLog::DefinitionMaster(context, "master");
-    String log_dir = context->toplevel_dir + "/servers/master/log";
-    context->mml_writer = new MetaLog::Writer(context->dfs, context->mml_definition,
-                                              log_dir + "/" + context->mml_definition->name(),
-                                              entities);
+    context.mml_definition = new MetaLog::DefinitionMaster(&context, "master");
+    String log_dir = context.toplevel_dir + "/servers/master/log";
+    context.mml_writer = new MetaLog::Writer(context.dfs,
+            context.mml_definition,
+            log_dir + "/" + context.mml_definition->name(), entities);
 
     FailureInducer::instance = new FailureInducer();
-    context->request_timeout = 600;
+    context.request_timeout = 600;
 
-    context->balancer = new LoadBalancerBasic(context);
+    context.balancer = new LoadBalancerBasic(&context);
 
-    ResponseManagerContext *rmctx = new ResponseManagerContext(context->mml_writer);
-    context->response_manager = new ResponseManager(rmctx);
-    Thread response_manager_thread(*context->response_manager);
+    ResponseManagerContext *rmctx = new ResponseManagerContext(context.mml_writer);
+    context.response_manager = new ResponseManager(rmctx);
+    Thread response_manager_thread(*context.response_manager);
 
-    context->reference_manager = new ReferenceManager();
+    context.reference_manager = new ReferenceManager();
 
     String testname = get_str("test");
 
     if (testname == "initialize")
-      master_initialize_test(context);
+      master_initialize_test(&context);
     else if (testname == "system_upgrade")
-      system_upgrade_test(context);
+      system_upgrade_test(&context);
     else if (testname == "create_namespace")
-      create_namespace_test(context);
+      create_namespace_test(&context);
     else if (testname == "drop_namespace")
-      drop_namespace_test(context);
+      drop_namespace_test(&context);
     else if (testname == "create_table")
-      create_table_test(context);
+      create_table_test(&context);
     else if (testname == "create_table_with_index")
-      create_table_with_index_test(context);
+      create_table_with_index_test(&context);
     else if (testname == "rename_table")
-      rename_table_test(context);
+      rename_table_test(&context);
     else if (testname == "move_range")
-      move_range_test(context);
+      move_range_test(&context);
     else {
       HT_ERRORF("Unrecognized test name: %s", testname.c_str());
       _exit(1);
@@ -297,11 +296,11 @@ int main(int argc, char **argv) {
     _exit(1);
   }
 
-  return 0;
+  _exit(0);
 }
 
 
-void create_namespace_test(ContextPtr &context) {
+void create_namespace_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -311,7 +310,7 @@ void create_namespace_test(ContextPtr &context) {
                                             log_dir + "/" + context->mml_definition->name(),
                                             entities);
 
-  entities.push_back( new OperationCreateNamespace(context, "foo", 0) );
+  entities.push_back(new OperationCreateNamespace(context, "foo", 0));
 
   expected_operations.clear();
   expected_operations.insert( std::pair<String, int32_t>("OperationCreateNamespace", OperationState::ASSIGN_ID) );
@@ -334,13 +333,10 @@ void create_namespace_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
-void drop_namespace_test(ContextPtr &context) {
+void drop_namespace_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -350,7 +346,7 @@ void drop_namespace_test(ContextPtr &context) {
                                             log_dir + "/" + context->mml_definition->name(),
                                             entities);
 
-  entities.push_back( new OperationDropNamespace(context, "foo", false) );
+  entities.push_back(new OperationDropNamespace(context, "foo", false));
 
   expected_operations.clear();
   expected_operations.insert( std::pair<String, int32_t>("OperationDropNamespace", OperationState::STARTED) );
@@ -373,9 +369,6 @@ void drop_namespace_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 namespace {
@@ -403,7 +396,7 @@ namespace {
 
 
 
-void create_table_test(ContextPtr &context) {
+void create_table_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -423,7 +416,7 @@ void create_table_test(ContextPtr &context) {
   expected_servers.push_back("rs1");
   expected_servers.push_back("rs2");
 
-  entities.push_back( new OperationCreateTable(context, "tablefoo", schema_str) );
+  entities.push_back(new OperationCreateTable(context, "tablefoo", schema_str));
 
   expected_operations.insert( std::pair<String, int32_t>("OperationCreateTable", OperationState::ASSIGN_ID) );
   run_test(context, log_dir, entities, "create-table-INITIAL:throw:0",
@@ -478,13 +471,10 @@ void create_table_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
-void create_table_with_index_test(ContextPtr &context) {
+void create_table_with_index_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -555,13 +545,10 @@ void create_table_with_index_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
-void rename_table_test(ContextPtr &context) {
+void rename_table_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -571,7 +558,7 @@ void rename_table_test(ContextPtr &context) {
                                             log_dir + "/" + context->mml_definition->name(),
                                             entities);
 
-  entities.push_back( new OperationRenameTable(context, "tablefoo", "tablebar") );
+  entities.push_back(new OperationRenameTable(context, "tablefoo", "tablebar"));
 
   expected_operations.clear();
   expected_operations.insert( std::pair<String, int32_t>("OperationRenameTable", OperationState::STARTED) );
@@ -582,13 +569,10 @@ void rename_table_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
-void master_initialize_test(ContextPtr &context) {
+void master_initialize_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -614,7 +598,7 @@ void master_initialize_test(ContextPtr &context) {
   expected_servers.push_back("rs3");
   expected_servers.push_back("rs4");
 
-  entities.push_back( new OperationInitialize(context) );
+  entities.push_back(new OperationInitialize(context));
 
   expected_operations.clear();
   expected_operations.insert( std::pair<String, int32_t>("OperationInitialize", OperationState::STARTED) );
@@ -669,9 +653,6 @@ void master_initialize_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
@@ -691,7 +672,7 @@ namespace {
 
 
 
-void system_upgrade_test(ContextPtr &context) {
+void system_upgrade_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -707,20 +688,17 @@ void system_upgrade_test(ContextPtr &context) {
                                             log_dir + "/" + context->mml_definition->name(),
                                             entities);
 
-  entities.push_back( new OperationSystemUpgrade(context) );
+  entities.push_back(new OperationSystemUpgrade(context));
 
   expected_operations.clear();
   run_test(context, log_dir, entities, "", expected_operations, expected_servers);
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }
 
 
-void move_range_test(ContextPtr &context) {
+void move_range_test(Context *context) {
   std::vector<MetaLog::EntityPtr> entities;
   ExpectedResultsMap expected_operations;
   std::vector<String> expected_servers;
@@ -778,7 +756,4 @@ void move_range_test(ContextPtr &context) {
 
   context->op->shutdown();
   context->op->join();
-
-  context = 0;
-  _exit(0);
 }

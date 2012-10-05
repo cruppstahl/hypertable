@@ -36,12 +36,12 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationInitialize::OperationInitialize(ContextPtr &context)
+OperationInitialize::OperationInitialize(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_INITIALIZE) {
   m_obstructions.insert(Dependency::INIT);
 }
 
-OperationInitialize::OperationInitialize(ContextPtr &context,
+OperationInitialize::OperationInitialize(Context *context,
                                          const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }

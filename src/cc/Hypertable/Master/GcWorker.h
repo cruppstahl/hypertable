@@ -34,7 +34,7 @@ namespace Hypertable {
 
   class GcWorker {
   public:
-    GcWorker(ContextPtr &context);
+    GcWorker(Context *context);
     void gc();
 
   private:
@@ -45,7 +45,7 @@ namespace Hypertable {
     void insert_file(CountMap &map, const char *fname, int c);
     void reap(CountMap &files_map);
 
-    ContextPtr m_context;
+    Context *m_context;
     String     m_tables_dir;
   };
 

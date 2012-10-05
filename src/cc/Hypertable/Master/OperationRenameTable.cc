@@ -32,17 +32,17 @@
 using namespace Hypertable;
 
 
-OperationRenameTable::OperationRenameTable(ContextPtr &context, const String &old_name, const String &new_name)
+OperationRenameTable::OperationRenameTable(Context *context, const String &old_name, const String &new_name)
   : Operation(context, MetaLog::EntityType::OPERATION_RENAME_TABLE), m_old_name(old_name), m_new_name(new_name) {
   initialize_dependencies();
 }
 
-OperationRenameTable::OperationRenameTable(ContextPtr &context,
+OperationRenameTable::OperationRenameTable(Context *context,
                                  const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationRenameTable::OperationRenameTable(ContextPtr &context, EventPtr &event) 
+OperationRenameTable::OperationRenameTable(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_RENAME_TABLE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

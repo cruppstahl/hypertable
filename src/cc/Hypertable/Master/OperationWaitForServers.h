@@ -28,7 +28,7 @@ namespace Hypertable {
 
   class OperationWaitForServers : public Operation {
   public:
-    OperationWaitForServers(ContextPtr &context);
+    OperationWaitForServers(Context *context);
     virtual ~OperationWaitForServers() { }
 
     virtual void execute();

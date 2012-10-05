@@ -54,27 +54,26 @@ int
 main(int ac, char *av[]) {
   ClientPtr client;
   NamespacePtr ns;
-  ContextPtr context;
+  Context context;
 
   try {
     init_with_policy<AppPolicy>(ac, av);
 
-    context->comm = Comm::instance();
-    context->conn_manager = new ConnectionManager(context->comm);
-    context->props = properties;
-    context->toplevel_dir = properties->get_str("Hypertable.Directory");
-    boost::trim_if(context->toplevel_dir, boost::is_any_of("/"));
-    context->toplevel_dir = String("/") + context->toplevel_dir;
-    context->dfs = new DfsBroker::Client(context->conn_manager, context->props);
+    context.comm = Comm::instance();
+    context.conn_manager = new ConnectionManager(context.comm);
+    context.props = properties;
+    context.toplevel_dir = properties->get_str("Hypertable.Directory");
+    boost::trim_if(context.toplevel_dir, boost::is_any_of("/"));
+    context.toplevel_dir = String("/") + context.toplevel_dir;
+    context.dfs = new DfsBroker::Client(context.conn_manager, context.props);
 
     client = new Hypertable::Client("htgc");
     ns = client->open_namespace("sys");
-    context->metadata_table = ns->open_table("METADATA");
+    context.metadata_table = ns->open_table("METADATA");
 
-    GcWorker worker(context);
+    GcWorker worker(&context);
 
     worker.gc();
-
   }
   catch (Exception &e) {
     HT_ERROR_OUT << e << HT_END;

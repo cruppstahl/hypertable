@@ -87,7 +87,7 @@ set(SRC_DIR "${HYPERTABLE_SOURCE_DIR}/src/cc/Hypertable/Master/tests")
 set(DST_DIR "${HYPERTABLE_BINARY_DIR}/src/cc/Hypertable/Master")
 
 add_executable(htgc htgc.cc GcWorker.cc)
-target_link_libraries(htgc HyperDfsBroker Hypertable ${RRD_LIBRARIES})
+target_link_libraries(htgc HyperMaster HyperDfsBroker Hypertable ${RRD_LIBRARIES})
 
 add_test(MasterOperation-TestSetup env INSTALL_DIR=${INSTALL_DIR} 
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/op_test_setup.sh)
@@ -109,4 +109,7 @@ if (NOT HT_COMPONENT_INSTALL)
           RUNTIME DESTINATION bin
           LIBRARY DESTINATION lib
           ARCHIVE DESTINATION lib)
+  install(FILES MetaLogEntityOperation.h MetaLogDefinitionMaster.h
+          RangeServerConnection.h
+      DESTINATION include/Hypertable/Master)
 endif ()

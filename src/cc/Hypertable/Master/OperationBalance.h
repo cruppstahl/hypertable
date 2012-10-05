@@ -30,8 +30,8 @@ namespace Hypertable {
 
   class OperationBalance : public Operation {
   public:
-    OperationBalance(ContextPtr &context);
-    OperationBalance(ContextPtr &context, const MetaLog::EntityHeader &header_);
+    OperationBalance(Context *context);
+    OperationBalance(Context *context, const MetaLog::EntityHeader &header_);
     virtual ~OperationBalance() { }
 
     void initialize_dependencies();

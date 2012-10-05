@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
     hash_map<String, MetaLog::DefinitionPtr> defmap;
     MetaLog::DefinitionPtr def = new MetaLog::DefinitionRangeServer("");
     defmap[def->name()] = def;
-    def = new MetaLog::DefinitionMaster("");
+    def = new MetaLog::DefinitionMaster(0, "");
     defmap[def->name()] = def;
 
     FilesystemPtr fs = dfs_client;

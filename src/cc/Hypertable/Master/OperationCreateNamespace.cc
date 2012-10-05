@@ -31,17 +31,17 @@
 using namespace Hypertable;
 
 
-OperationCreateNamespace::OperationCreateNamespace(ContextPtr &context, const String &name, int flags) 
+OperationCreateNamespace::OperationCreateNamespace(Context *context, const String &name, int flags) 
   : Operation(context, MetaLog::EntityType::OPERATION_CREATE_NAMESPACE), m_name(name), m_flags(flags) {
   initialize_dependencies();
 }
 
-OperationCreateNamespace::OperationCreateNamespace(ContextPtr &context,
+OperationCreateNamespace::OperationCreateNamespace(Context *context,
                                                    const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 }
 
-OperationCreateNamespace::OperationCreateNamespace(ContextPtr &context, EventPtr &event) 
+OperationCreateNamespace::OperationCreateNamespace(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_CREATE_NAMESPACE), m_flags(0) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

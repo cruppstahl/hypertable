@@ -37,19 +37,19 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationCreateTable::OperationCreateTable(ContextPtr &context, const String &name, const String &schema)
+OperationCreateTable::OperationCreateTable(Context *context, const String &name, const String &schema)
   : Operation(context, MetaLog::EntityType::OPERATION_CREATE_TABLE), m_name(name), m_schema(schema) {
   initialize_dependencies();
 }
 
-OperationCreateTable::OperationCreateTable(ContextPtr &context,
+OperationCreateTable::OperationCreateTable(Context *context,
                                            const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
   if (m_table.id && *m_table.id != 0)
     m_range_name = format("%s[..%s]", m_table.id, Key::END_ROW_MARKER);
 }
 
-OperationCreateTable::OperationCreateTable(ContextPtr &context, EventPtr &event)
+OperationCreateTable::OperationCreateTable(Context *context, EventPtr &event)
   : Operation(context, event, MetaLog::EntityType::OPERATION_CREATE_TABLE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

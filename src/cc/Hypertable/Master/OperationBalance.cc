@@ -50,13 +50,13 @@ void do_block(OperationBalance *obj) {
 
 const String OperationBalance::ms_name("OperationBalance");
 
-OperationBalance::OperationBalance(ContextPtr &context)
+OperationBalance::OperationBalance(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_BALANCE) {
   m_plan = new BalancePlan();
   initialize_dependencies();
 }
 
-OperationBalance::OperationBalance(ContextPtr &context,
+OperationBalance::OperationBalance(Context *context,
                                    const MetaLog::EntityHeader &header_)
   : Operation(context, header_) {
 

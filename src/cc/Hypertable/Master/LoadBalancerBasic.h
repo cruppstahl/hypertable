@@ -43,7 +43,7 @@ namespace Hypertable {
         BALANCE_MODE_OFFLOAD_SERVERS             = 3
       };
 
-      LoadBalancerBasic(ContextPtr context);
+      LoadBalancerBasic(Context *context);
 
       void transfer_monitoring_data(vector<RangeServerStatistics> &stats);
       void balance(const String &algorithm=String());

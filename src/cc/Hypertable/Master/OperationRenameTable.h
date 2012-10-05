@@ -28,9 +28,9 @@ namespace Hypertable {
 
   class OperationRenameTable : public Operation {
   public:
-    OperationRenameTable(ContextPtr &context, const String &old_name, const String &new_name);
-    OperationRenameTable(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationRenameTable(ContextPtr &context, EventPtr &event);
+    OperationRenameTable(Context *context, const String &old_name, const String &new_name);
+    OperationRenameTable(Context *context, const MetaLog::EntityHeader &header_);
+    OperationRenameTable(Context *context, EventPtr &event);
     virtual ~OperationRenameTable() { }
 
     virtual void execute();

@@ -29,7 +29,7 @@
 
 using namespace Hypertable;
 
-OperationStatus::OperationStatus(ContextPtr &context, EventPtr &event) 
+OperationStatus::OperationStatus(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_STATUS) {
   HT_INFOF("Status-%lld", (Lld)header.id);
   set_state(OperationState::STARTED);

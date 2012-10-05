@@ -45,7 +45,7 @@ namespace Hypertable {
     virtual void balance(const String &algorithm=String()) = 0;
     virtual void transfer_monitoring_data(vector<RangeServerStatistics> &stats)=0;
 
-    LoadBalancer(ContextPtr context) : m_context(context), m_last_balance_time(min_date_time) {
+    LoadBalancer(Context *context) : m_context(context), m_last_balance_time(min_date_time) {
       m_balance_interval     = m_context->props->get_i32("Hypertable.LoadBalancer.Interval");
       m_balance_window_start = duration_from_string(m_context->props->get_str(
           "Hypertable.LoadBalancer.WindowStart"));
@@ -79,7 +79,7 @@ namespace Hypertable {
   protected:
     Mutex m_mutex;
     boost::condition m_cond;
-    ContextPtr m_context;
+    Context *m_context;
     uint32_t m_balance_interval;
     uint32_t m_balance_wait;
     time_duration m_balance_window_start;

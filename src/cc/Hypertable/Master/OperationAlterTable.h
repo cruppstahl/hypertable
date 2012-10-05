@@ -30,9 +30,9 @@ namespace Hypertable {
 
   class OperationAlterTable : public Operation {
   public:
-    OperationAlterTable(ContextPtr &context, const String &name, const String &schema);
-    OperationAlterTable(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationAlterTable(ContextPtr &context, EventPtr &event);
+    OperationAlterTable(Context *context, const String &name, const String &schema);
+    OperationAlterTable(Context *context, const MetaLog::EntityHeader &header_);
+    OperationAlterTable(Context *context, EventPtr &event);
     virtual ~OperationAlterTable() { }
 
     virtual void execute();

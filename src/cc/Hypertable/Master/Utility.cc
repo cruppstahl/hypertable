@@ -44,7 +44,7 @@ using namespace Hyperspace;
 
 namespace Hypertable { namespace Utility {
 
-void get_table_server_set(ContextPtr &context, const String &id, StringSet &servers) {
+void get_table_server_set(Context *context, const String &id, StringSet &servers) {
   String start_row, end_row;
   ScanSpec scan_spec;
   RowInterval ri;
@@ -74,7 +74,7 @@ void get_table_server_set(ContextPtr &context, const String &id, StringSet &serv
   }
 }
 
-bool table_exists(ContextPtr &context, const String &name, String &id) {
+bool table_exists(Context *context, const String &name, String &id) {
   bool is_namespace;
 
   id = "";
@@ -99,7 +99,7 @@ bool table_exists(ContextPtr &context, const String &name, String &id) {
 }
 
 
-bool table_exists(ContextPtr &context, const String &id) {
+bool table_exists(Context *context, const String &id) {
 
   String tablefile = context->toplevel_dir + "/tables/" + id;
 
@@ -117,7 +117,7 @@ bool table_exists(ContextPtr &context, const String &id) {
 }
 
 
-void verify_table_name_availability(ContextPtr &context, const String &name, String &id) {
+void verify_table_name_availability(Context *context, const String &name, String &id) {
   bool is_namespace;
 
   id = "";
@@ -141,7 +141,7 @@ void verify_table_name_availability(ContextPtr &context, const String &name, Str
 }
 
 
-void create_table_in_hyperspace(ContextPtr &context, const String &name,
+void create_table_in_hyperspace(Context *context, const String &name,
                                 const String &schema_str, TableIdentifierManaged *table) {
   String table_name = name;
 
@@ -194,7 +194,7 @@ void create_table_in_hyperspace(ContextPtr &context, const String &name,
   }
 }
 
-void prepare_index(ContextPtr &context, const String &name,
+void prepare_index(Context *context, const String &name,
                    const String &schema_str, bool qualifier,
                    String &index_name, String &index_schema_str)
 {
@@ -241,7 +241,7 @@ void prepare_index(ContextPtr &context, const String &name,
   delete index_schema;
 }
 
-void create_table_write_metadata(ContextPtr &context, TableIdentifier *table) {
+void create_table_write_metadata(Context *context, TableIdentifier *table) {
 
   if (context->test_mode) {
     HT_WARN("Skipping create_table_write_metadata due to TEST MODE");
@@ -270,7 +270,7 @@ void create_table_write_metadata(ContextPtr &context, TableIdentifier *table) {
 /**
  */
 
-bool next_available_server(ContextPtr &context, String &location) {
+bool next_available_server(Context *context, String &location) {
   RangeServerConnectionPtr rsc;
   if (!context->next_available_server(rsc))
     return false;
@@ -279,7 +279,7 @@ bool next_available_server(ContextPtr &context, String &location) {
 }
 
 
-void create_table_load_range(ContextPtr &context, const String &location, TableIdentifier *table, RangeSpec &range, bool needs_compaction) {
+void create_table_load_range(Context *context, const String &location, TableIdentifier *table, RangeSpec &range, bool needs_compaction) {
   RangeServerClient rsc(context->comm);
   CommAddress addr;
 
@@ -338,7 +338,7 @@ String range_hash_string(const TableIdentifier &table, const RangeSpec &range, c
   return String("") + range_hash_code(table, range, qualifier);
 }
 
-String root_range_location(ContextPtr &context) {
+String root_range_location(Context *context) {
   DynamicBuffer value(0);
   String location;
   uint64_t root_handle=0;

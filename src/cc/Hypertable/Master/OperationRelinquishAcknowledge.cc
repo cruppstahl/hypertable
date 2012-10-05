@@ -36,7 +36,7 @@
 
 using namespace Hypertable;
 
-OperationRelinquishAcknowledge::OperationRelinquishAcknowledge(ContextPtr &context, EventPtr &event) 
+OperationRelinquishAcknowledge::OperationRelinquishAcknowledge(Context *context, EventPtr &event) 
   : Operation(context, event, MetaLog::EntityType::OPERATION_RELINQUISH_ACKNOWLEDGE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

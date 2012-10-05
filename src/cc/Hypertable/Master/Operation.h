@@ -83,9 +83,9 @@ namespace Hypertable {
 
   class Operation : public MetaLog::Entity {
   public:
-    Operation(ContextPtr &context, int32_t type);
-    Operation(ContextPtr &context, EventPtr &event, int32_t type);
-    Operation(ContextPtr &context, const MetaLog::EntityHeader &header_);
+    Operation(Context *context, int32_t type);
+    Operation(Context *context, EventPtr &event, int32_t type);
+    Operation(Context *context, const MetaLog::EntityHeader &header_);
     virtual ~Operation() { }
 
     virtual void execute() = 0;
@@ -155,7 +155,7 @@ namespace Hypertable {
 
   protected:
     Mutex m_mutex;
-    ContextPtr m_context;
+    Context *m_context;
     EventPtr m_event;
     int32_t m_state;
     int32_t m_error;

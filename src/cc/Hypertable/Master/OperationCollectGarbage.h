@@ -29,7 +29,7 @@ namespace Hypertable {
 
   class OperationCollectGarbage : public Operation {
   public:
-    OperationCollectGarbage(ContextPtr &context);
+    OperationCollectGarbage(Context *context);
     virtual ~OperationCollectGarbage() { }
 
     virtual void execute();

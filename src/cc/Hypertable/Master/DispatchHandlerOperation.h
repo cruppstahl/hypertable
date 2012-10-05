@@ -48,7 +48,7 @@ namespace Hypertable {
       String msg;
     };
 
-    DispatchHandlerOperation(ContextPtr &context);
+    DispatchHandlerOperation(Context *context);
 
     void start(StringSet &locations);
 
@@ -65,7 +65,7 @@ namespace Hypertable {
     void process_events();
 
   protected:
-    ContextPtr m_context;
+    Context *m_context;
     RangeServerClient m_rsclient;
 
   private:

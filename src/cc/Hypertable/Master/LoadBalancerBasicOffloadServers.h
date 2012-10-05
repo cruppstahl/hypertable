@@ -39,7 +39,7 @@ namespace Hypertable {
   class LoadBalancerBasicOffloadServers {
 
     public:
-      LoadBalancerBasicOffloadServers(ContextPtr context)
+      LoadBalancerBasicOffloadServers(Context *context)
         : m_context(context) { }
 
       void compute_plan(std::vector<RangeServerStatistics> &range_server_stats,
@@ -51,7 +51,7 @@ namespace Hypertable {
               std::set<String> &offload_servers, const String &root_location,
               BalancePlanPtr &balance_plan);
 
-      ContextPtr m_context;
+      Context *m_context;
   }; // LoadBalancerBasicOffloadServers
 
 

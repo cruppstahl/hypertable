@@ -39,7 +39,7 @@
 using namespace Hypertable;
 using namespace Hyperspace;
 
-OperationMoveRange::OperationMoveRange(ContextPtr &context, const String &source,
+OperationMoveRange::OperationMoveRange(Context *context, const String &source,
 				       const TableIdentifier &table, const RangeSpec &range,
 				       const String &transfer_log,
                                        uint64_t soft_limit, bool is_split)
@@ -51,12 +51,12 @@ OperationMoveRange::OperationMoveRange(ContextPtr &context, const String &source
   m_hash_code = Utility::range_hash_code(m_table, m_range, String("OperationMoveRange-") + m_source);
 }
 
-OperationMoveRange::OperationMoveRange(ContextPtr &context,
+OperationMoveRange::OperationMoveRange(Context *context,
                                        const MetaLog::EntityHeader &header_)
   : Operation(context, header_), m_source("UNKNOWN") {
 }
 
-OperationMoveRange::OperationMoveRange(ContextPtr &context, EventPtr &event)
+OperationMoveRange::OperationMoveRange(Context *context, EventPtr &event)
   : Operation(context, event, MetaLog::EntityType::OPERATION_MOVE_RANGE) {
   const uint8_t *ptr = event->payload;
   size_t remaining = event->payload_len;

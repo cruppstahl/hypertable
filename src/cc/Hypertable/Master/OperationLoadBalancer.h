@@ -29,8 +29,8 @@ namespace Hypertable {
 
   class OperationLoadBalancer : public Operation {
   public:
-    OperationLoadBalancer(ContextPtr &context);
-    OperationLoadBalancer(ContextPtr &context, EventPtr &event);
+    OperationLoadBalancer(Context *context);
+    OperationLoadBalancer(Context *context, EventPtr &event);
     virtual ~OperationLoadBalancer() { }
 
     virtual void execute();

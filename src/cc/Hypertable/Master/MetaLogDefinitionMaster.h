@@ -26,22 +26,29 @@
 
 #include "Hypertable/Lib/MetaLogDefinition.h"
 
-#include "Context.h"
-
 namespace Hypertable {
+
+  class Context;
+
   namespace MetaLog {
+
     class DefinitionMaster : public Definition {
     public:
-      DefinitionMaster(const char *backup_label) : Definition(backup_label) { }
-      DefinitionMaster(ContextPtr &context, const char *backup_label) : Definition(backup_label)
-          , m_context(context) { }
+      DefinitionMaster(Context *context, const char *backup_label)
+        : Definition(backup_label), m_context(context) { }
+
       virtual uint16_t version();
+
       virtual bool supported_version(uint16_t ver);
+
       virtual const char *name();
+
       virtual Entity *create(uint16_t log_version, const EntityHeader &header);
+
     private:
-      ContextPtr m_context;
+      Context *m_context;
     };
+
     typedef intrusive_ptr<DefinitionMaster> DefinitionMasterPtr;
   }
 

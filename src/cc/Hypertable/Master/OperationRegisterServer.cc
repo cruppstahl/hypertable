@@ -37,7 +37,7 @@
 using namespace Hypertable;
 
 
-OperationRegisterServer::OperationRegisterServer(ContextPtr &context, EventPtr &event)
+OperationRegisterServer::OperationRegisterServer(Context *context, EventPtr &event)
   : Operation(context, event, MetaLog::EntityType::OPERATION_REGISTER_SERVER) {
 
   const uint8_t *ptr = event->payload;

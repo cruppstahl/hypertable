@@ -28,9 +28,9 @@ namespace Hypertable {
 
   class OperationGetSchema : public Operation {
   public:
-    OperationGetSchema(ContextPtr &context, const String &name);
-    OperationGetSchema(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationGetSchema(ContextPtr &context, EventPtr &event);
+    OperationGetSchema(Context *context, const String &name);
+    OperationGetSchema(Context *context, const MetaLog::EntityHeader &header_);
+    OperationGetSchema(Context *context, EventPtr &event);
     virtual ~OperationGetSchema() { }
 
     virtual void execute();

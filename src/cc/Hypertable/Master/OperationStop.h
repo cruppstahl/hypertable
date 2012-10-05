@@ -28,7 +28,7 @@ namespace Hypertable {
 
   class OperationStop : public Operation {
   public:
-    OperationStop(ContextPtr &context, EventPtr &event);
+    OperationStop(Context *context, EventPtr &event);
     virtual ~OperationStop() { }
 
     virtual void execute();

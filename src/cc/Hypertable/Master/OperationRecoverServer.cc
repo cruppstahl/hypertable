@@ -27,7 +27,7 @@
 
 using namespace Hypertable;
 
-OperationRecoverServer::OperationRecoverServer(ContextPtr &context, RangeServerConnectionPtr &rsc)
+OperationRecoverServer::OperationRecoverServer(Context *context, RangeServerConnectionPtr &rsc)
   : Operation(context, MetaLog::EntityType::OPERATION_RECOVER_SERVER), m_rsc(rsc) {
   m_exclusivities.insert(m_rsc->location());
   m_hash_code = md5_hash("RecoverServer") ^ md5_hash(m_rsc->location().c_str());

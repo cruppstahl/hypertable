@@ -30,7 +30,7 @@ namespace Hypertable {
 
   class DispatchHandlerOperationAlterTable : public DispatchHandlerOperation {
   public:
-    DispatchHandlerOperationAlterTable(ContextPtr &context, const TableIdentifier &table, const String &schema) :
+    DispatchHandlerOperationAlterTable(Context *context, const TableIdentifier &table, const String &schema) :
       DispatchHandlerOperation(context), m_table(table), m_schema(schema) { }
     virtual void start(const String &location) {
       CommAddress addr;

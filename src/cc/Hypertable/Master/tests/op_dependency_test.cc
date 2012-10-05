@@ -113,40 +113,39 @@ namespace {
 
 } // local namespace
 
-
 int main(int argc, char **argv) {
 
   try {
     init_with_policies<Policies>(argc, argv);
     DependencySet dependencies, exclusivities, obstructions;
     std::vector<OperationPtr> operations;
-    ContextPtr context = new Context();
+    Context context;
     OperationPtr operation;
     std::vector<String> results;
     std::set<String> seen;
     String str;
     std::vector<MetaLog::EntityPtr> entities;
 
-    context->comm = Comm::instance();
-    context->conn_manager = new ConnectionManager(context->comm);
-    context->props = properties;
-    context->dfs = new DfsBroker::Client(context->conn_manager, context->props);
-    context->toplevel_dir = properties->get_str("Hypertable.Directory");
-    String log_dir = context->toplevel_dir + "/servers/master/log";
-    boost::trim_if(context->toplevel_dir, boost::is_any_of("/"));
-    context->toplevel_dir = String("/") + context->toplevel_dir;
-    context->mml_definition = new MetaLog::DefinitionMaster(context, "master");
-    context->mml_writer = new MetaLog::Writer(context->dfs, context->mml_definition,
-                                              log_dir + "/" + context->mml_definition->name(),
-                                              entities);
+    context.comm = Comm::instance();
+    context.conn_manager = new ConnectionManager(context.comm);
+    context.props = properties;
+    context.dfs = new DfsBroker::Client(context.conn_manager, context.props);
+    context.toplevel_dir = properties->get_str("Hypertable.Directory");
+    String log_dir = context.toplevel_dir + "/servers/master/log";
+    boost::trim_if(context.toplevel_dir, boost::is_any_of("/"));
+    context.toplevel_dir = String("/") + context.toplevel_dir;
+    context.mml_definition = new MetaLog::DefinitionMaster(&context, "master");
+    context.mml_writer = new MetaLog::Writer(context.dfs,
+            context.mml_definition,
+            log_dir + "/" + context.mml_definition->name(), entities);
 
-    ResponseManagerContext *rmctx = new ResponseManagerContext(context->mml_writer);
-    context->response_manager = new ResponseManager(rmctx);
-    Thread response_manager_thread(*context->response_manager);
+    ResponseManagerContext *rmctx = new ResponseManagerContext(context.mml_writer);
+    context.response_manager = new ResponseManager(rmctx);
+    Thread response_manager_thread(*context.response_manager);
 
-    context->reference_manager = new ReferenceManager();
+    context.reference_manager = new ReferenceManager();
 
-    context->op = new OperationProcessor(context, 4);
+    context.op = new OperationProcessor(&context, 4);
 
     /**
      *  TEST 1
@@ -154,19 +153,19 @@ int main(int argc, char **argv) {
 
     dependencies.insert("op1");
     exclusivities.clear();
-    operation = new OperationTest(context, results, "A", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "A", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
-    operation = new OperationTest(context, results, "B", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "B", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
     dependencies.insert("op2");
     exclusivities.clear();
-    operation = new OperationTest(context, results, "C", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "C", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
-    operation = new OperationTest(context, results, "D", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "D", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
@@ -174,7 +173,7 @@ int main(int argc, char **argv) {
     dependencies.insert("op4");
     exclusivities.clear();
     exclusivities.insert("op1");
-    operation = new OperationTest(context, results, "E", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "E", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
@@ -182,7 +181,7 @@ int main(int argc, char **argv) {
     dependencies.insert("rs2");
     exclusivities.clear();
     exclusivities.insert("op2");
-    operation = new OperationTest(context, results, "F", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "F", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
@@ -190,7 +189,7 @@ int main(int argc, char **argv) {
     dependencies.insert("op5");
     exclusivities.clear();
     exclusivities.insert("op3");
-    operation = new OperationTest(context, results, "G", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "G", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
@@ -199,7 +198,7 @@ int main(int argc, char **argv) {
     dependencies.insert("rs1");
     exclusivities.clear();
     exclusivities.insert("op4");
-    operation = new OperationTest(context, results, "H", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "H", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
@@ -208,36 +207,35 @@ int main(int argc, char **argv) {
     dependencies.insert("rs2");
     exclusivities.clear();
     exclusivities.insert("op5");
-    operation = new OperationTest(context, results, "I", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "I", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
     exclusivities.clear();
     exclusivities.insert("/n1");
-    operation = new OperationTest(context, results, "J", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "J", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
     exclusivities.clear();
     exclusivities.insert("/n2");
-    operation = new OperationTest(context, results, "K", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "K", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
     exclusivities.clear();
     exclusivities.insert("rs1");
-    operation = new OperationTest(context, results, "L", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "L", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.clear();
     exclusivities.clear();
     exclusivities.insert("rs2");
-    operation = new OperationTest(context, results, "M", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "M", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
-    context->op->add_operations(operations);
-
-    context->op->wait_for_empty();
+    context.op->add_operations(operations);
+    context.op->wait_for_empty();
 
     for (size_t i=0; i<results.size(); i++) {
       if (!boost::ends_with(results[i], "[0]")) {
@@ -258,55 +256,54 @@ int main(int argc, char **argv) {
     obstructions.clear();
 
     dependencies.insert("foo");
-    operation = new OperationTest(context, results, "A", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "A", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     dependencies.clear();
 
     exclusivities.insert("foo");
-    operation = new OperationTest(context, results, "E", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "E", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
-    operation = new OperationTest(context, results, "D", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "D", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
     dependencies.insert("rs1");
-    operation = new OperationTest(context, results, "C", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "C", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     dependencies.clear();
     
-    operation = new OperationTest(context, results, "B", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "B", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     exclusivities.clear();
 
     dependencies.insert("rs1");
-    operation = new OperationTest(context, results, "F", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "F", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
-    operation = new OperationTest(context, results, "G", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "G", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     dependencies.clear();
 
     dependencies.insert("wow");
     obstructions.insert("rs1");
-    operation = new OperationTest(context, results, "H", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "H", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     dependencies.clear();
     obstructions.clear();
 
     dependencies.insert("wow");
     obstructions.insert("foo");
-    operation = new OperationTest(context, results, "I", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "I", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
     dependencies.clear();
     obstructions.clear();
 
     obstructions.insert("wow");
     dependencies.insert("unknown");
-    operation = new OperationTest(context, results, "J", dependencies, exclusivities, obstructions);
+    operation = new OperationTest(&context, results, "J", dependencies, exclusivities, obstructions);
     operations.push_back(operation);
 
-    context->op->add_operations(operations);
-
-    context->op->wait_for_empty();
+    context.op->add_operations(operations);
+    context.op->wait_for_empty();
 
     seen.clear();
     for (size_t i=0; i<results.size(); i++) {
@@ -322,31 +319,31 @@ int main(int argc, char **argv) {
      *  TEST 3 (test blocked state)
      */
 
-    OperationTestPtr operation_foo = new OperationTest(context, results, "foo", OperationState::STARTED);
-    OperationTestPtr operation_bar = new OperationTest(context, results, "bar", OperationState::STARTED);
+    OperationTestPtr operation_foo = new OperationTest(&context, results, "foo", OperationState::STARTED);
+    OperationTestPtr operation_bar = new OperationTest(&context, results, "bar", OperationState::STARTED);
 
     operations.clear();
     operation_foo->block();
     operations.push_back(operation_foo);
     operation_bar->block();
     operations.push_back(operation_bar);
-    context->op->add_operations(operations);
-    context->op->wait_for_idle();
+    context.op->add_operations(operations);
+    context.op->wait_for_idle();
 
-    HT_ASSERT(context->op->size() == 2);
+    HT_ASSERT(context.op->size() == 2);
 
     operation_foo->unblock();
-    context->op->wake_up();
+    context.op->wake_up();
     poll(0, 0, 1000);
-    context->op->wait_for_idle();
+    context.op->wait_for_idle();
     
-    HT_ASSERT(context->op->size() == 1);
+    HT_ASSERT(context.op->size() == 1);
 
     operation_bar->unblock();
-    context->op->wake_up();
-    context->op->wait_for_empty();
+    context.op->wake_up();
+    context.op->wait_for_empty();
 
-    HT_ASSERT(context->op->empty());
+    HT_ASSERT(context.op->empty());
 
     /**
      *  TEST 4 (perpetual)
@@ -355,33 +352,30 @@ int main(int argc, char **argv) {
     exclusivities.clear();
     obstructions.clear();
     obstructions.insert("yabadabadoo");
-    OperationTest *operation_perp = new OperationTest(context, results, "perp", dependencies, exclusivities, obstructions);
+    OperationTest *operation_perp = new OperationTest(&context, results, "perp", dependencies, exclusivities, obstructions);
     operation_perp->set_is_perpetual(true);
     obstructions.clear();
 
     operation = operation_perp;
-    context->op->add_operation(operation);
-    context->op->wait_for_idle();
+    context.op->add_operation(operation);
+    context.op->wait_for_idle();
 
     dependencies.insert("yabadabadoo");
-    operation_foo = new OperationTest(context, results, "foo", dependencies, exclusivities, obstructions);
-    operation_bar = new OperationTest(context, results, "bar", dependencies, exclusivities, obstructions);
+    operation_foo = new OperationTest(&context, results, "foo", dependencies, exclusivities, obstructions);
+    operation_bar = new OperationTest(&context, results, "bar", dependencies, exclusivities, obstructions);
 
     operations.clear();
     operations.push_back(operation_foo);
     operations.push_back(operation_bar);
-    context->op->add_operations(operations);
-    context->op->wait_for_idle();
+    context.op->add_operations(operations);
+    context.op->wait_for_idle();
 
-    context->op->shutdown();
-    context->op->join();
+    context.op->shutdown();
+    context.op->join();
 
-    context->response_manager->shutdown();
+    context.response_manager->shutdown();
     response_manager_thread.join();
     delete rmctx;
-    delete context->response_manager;
-    delete context->reference_manager;
-
   }
   catch (Exception &e) {
     HT_ERROR_OUT << e << HT_END;

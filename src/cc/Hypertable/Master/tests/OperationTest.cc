@@ -34,7 +34,7 @@
 using namespace Hypertable;
 
 
-OperationTest::OperationTest(ContextPtr &context, std::vector<String> &results, const String &name,
+OperationTest::OperationTest(Context *context, std::vector<String> &results, const String &name,
                              DependencySet &dependencies, DependencySet &exclusivities,
                              DependencySet &obstructions)
   : Operation(context, MetaLog::EntityType::OPERATION_TEST), m_results(results), m_name(name), m_is_perpetual(false) {
@@ -45,7 +45,7 @@ OperationTest::OperationTest(ContextPtr &context, std::vector<String> &results, 
     set_state(OperationState::STARTED);
 }
 
-OperationTest::OperationTest(ContextPtr &context, std::vector<String> &results,
+OperationTest::OperationTest(Context *context, std::vector<String> &results,
                              const String &name, int32_t state) :
   Operation(context, MetaLog::EntityType::OPERATION_TEST), m_results(results),
   m_name(name), m_is_perpetual(false) {

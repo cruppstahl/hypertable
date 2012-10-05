@@ -35,7 +35,7 @@ using namespace Hypertable;
 using namespace std;
 
 
-LoadBalancerBasic::LoadBalancerBasic(ContextPtr context) : LoadBalancer(context), m_waiting_for_servers(false) {
+LoadBalancerBasic::LoadBalancerBasic(Context *context) : LoadBalancer(context), m_waiting_for_servers(false) {
   m_enabled = context->props->get_bool("Hypertable.LoadBalancer.Enable");
 }
 

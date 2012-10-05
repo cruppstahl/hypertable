@@ -26,7 +26,7 @@
 
 using namespace Hypertable;
 
-OperationWaitForServers::OperationWaitForServers(ContextPtr &context)
+OperationWaitForServers::OperationWaitForServers(Context *context)
   : Operation(context, MetaLog::EntityType::OPERATION_WAIT_FOR_SERVERS) {
   m_obstructions.insert(Dependency::SERVERS);
 }

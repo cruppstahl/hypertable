@@ -40,7 +40,7 @@ namespace Hypertable {
     public:
       LoadBalancerBasicDistributeLoad(double max_load_deviation,
               vector<RangeServerStatistics> &range_server_stats,
-              ContextPtr context)
+              Context *context)
           : m_loadavg_deviation_threshold(max_load_deviation),
             m_context(context) {
         foreach_ht (RangeServerStatistics &rs, range_server_stats)
@@ -110,7 +110,7 @@ namespace Hypertable {
       typedef std::map<String, RangeServerStatistics> StatisticsSet;
       StatisticsSet m_rsstats;
       double m_loadavg_deviation_threshold;
-      ContextPtr m_context;
+      Context *m_context;
   }; // LoadBalancerBasicDistributeLoad
 
   std::ostream &operator<<(std::ostream &out,

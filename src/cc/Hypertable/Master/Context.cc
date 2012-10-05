@@ -26,17 +26,22 @@
 #include "Operation.h"
 #include "OperationBalance.h"
 #include "ReferenceManager.h"
+#include "ResponseManager.h"
 
 using namespace Hypertable;
 using namespace std;
 
 Context::~Context() {
+  delete response_manager;
+  response_manager = 0;
   if (hyperspace && master_file_handle > 0) {
     hyperspace->close(master_file_handle);
     master_file_handle = 0;
   }
   delete balancer;
+  balancer = 0;
   delete reference_manager;
+  reference_manager = 0;
 }
 
 void Context::add_server(RangeServerConnectionPtr &rsc) {

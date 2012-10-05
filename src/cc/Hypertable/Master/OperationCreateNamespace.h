@@ -28,9 +28,9 @@ namespace Hypertable {
 
   class OperationCreateNamespace : public Operation {
   public:
-    OperationCreateNamespace(ContextPtr &context, const String &name, int flags);
-    OperationCreateNamespace(ContextPtr &context, const MetaLog::EntityHeader &header_);
-    OperationCreateNamespace(ContextPtr &context, EventPtr &event);
+    OperationCreateNamespace(Context *context, const String &name, int flags);
+    OperationCreateNamespace(Context *context, const MetaLog::EntityHeader &header_);
+    OperationCreateNamespace(Context *context, EventPtr &event);
     virtual ~OperationCreateNamespace() { }
 
     virtual void execute();

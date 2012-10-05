@@ -28,8 +28,8 @@ namespace Hypertable {
 
   class OperationInitialize : public Operation {
   public:
-    OperationInitialize(ContextPtr &context);
-    OperationInitialize(ContextPtr &context, const MetaLog::EntityHeader &header_);
+    OperationInitialize(Context *context);
+    OperationInitialize(Context *context, const MetaLog::EntityHeader &header_);
     virtual ~OperationInitialize() { }
 
     virtual void execute();
