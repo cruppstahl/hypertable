@@ -130,16 +130,16 @@ public class HdfsBroker {
         try {
             mFilesystem = FileSystem.get(mConf);
             mFilesystem.initialize(FileSystem.getDefaultUri(mConf), mConf);
-            mFilesystem_noverify = newInstanceFileSystem(mConf);
+            mFilesystem_noverify = newInstanceFileSystem();
             mFilesystem_noverify.setVerifyChecksum(false);
         }
         catch (Exception e) {
-            log.severe("ERROR: Unable to establish connection to HDFS.");
+            log.severe("ERROR: Unable to establish connection to HDFS: " + e);
             System.exit(1);
         }
     }
 
-    private void addHadoopResource(Configuration cfg, String path) 
+    private void addHadoopResource(String path) 
                     throws Exception {
         if (mVerbose)
             System.out.println("Adding hadoop configuration file " + path);
@@ -150,49 +150,44 @@ public class HdfsBroker {
             System.exit(1);
         }
 
-        cfg.addResource(new Path(path));
+        mConf.addResource(new Path(path));
     }
 
     private void readHadoopConfig(String dir) throws Exception {
-        Configuration cfg = new Configuration();
+        addHadoopResource(dir + "/hdfs-site.xml"); // for "dfs.replication"
+        addHadoopResource(dir + "/core-site.xml"); // for "fs.default.name"
 
-        addHadoopResource(cfg, dir + "/hdfs-site.xml"); // for "dfs.replication"
-        addHadoopResource(cfg, dir + "/core-site.xml"); // for "fs.default.name"
-
-        int replication = cfg.getInt("dfs.replication", 0);
+        int replication = mConf.getInt("dfs.replication", 0);
         if (replication == 0)
             System.out.println("Unable to get dfs.replication value; using default");
         else
             mConf.setInt("dfs.replication", replication);
 
-        String name = cfg.get("fs.default.name");
+        String name = mConf.get("fs.default.name");
         if (name == null)
             System.out.println("Unable to get fs.default.name value");
         else
             mConf.set("fs.default.name", name);
 
-        boolean b = cfg.getBoolean("dfs.client.read.shortcircuit", false);
+        boolean b = mConf.getBoolean("dfs.client.read.shortcircuit", false);
         mConf.setBoolean("dfs.client.read.shortcircuit", b);
     }
 
     /**
-     * Returns a brand new instance of the FileSystem. It does not use
-     * the FileSystem.Cache. In newer versions of HDFS, we can directly
-     * invoke FileSystem.newInstance(Configuration).
+     * Returns a brand new instance of the FileSystem
      * 
-     * @param conf Configuration
      * @return A new instance of the filesystem
      */
-    private static FileSystem newInstanceFileSystem(Configuration conf)
-	throws IOException {
-	URI uri = FileSystem.getDefaultUri(conf);
-	Class<?> clazz = conf.getClass("fs." + uri.getScheme() + ".impl", null);
-	if (clazz == null) {
-	    throw new IOException("No FileSystem for scheme: " + uri.getScheme());
-	}
-	FileSystem fs = (FileSystem)ReflectionUtils.newInstance(clazz, conf);
-	fs.initialize(uri, conf);
-	return fs;
+    private FileSystem newInstanceFileSystem()
+	        throws IOException {
+	    URI uri = FileSystem.getDefaultUri(mConf);
+        Class<?> clazz = FileSystem.getFileSystemClass(uri.getScheme(), mConf);
+        if (clazz == null)
+	        throw new IOException("HdfsBroker: No FileSystem for scheme: "
+                    + uri.getScheme());
+	    FileSystem fs = (FileSystem)ReflectionUtils.newInstance(clazz, mConf);
+	    fs.initialize(uri, mConf);
+	    return fs;
     }
 
     /**
@@ -792,7 +787,15 @@ public class HdfsBroker {
                 log.info("Readdir('" + dirName + "')");
 
             String [] listing = null;
-            FileStatus[] statuses = mFilesystem.listStatus(new Path(dirName));
+            FileStatus[] statuses = null;
+            // if the directory doesn't exist then CDH4 throws
+            // FileNotFoundException, but CDH3 returns NULL
+            try {
+                statuses = mFilesystem.listStatus(new Path(dirName));
+            }
+            catch (FileNotFoundException e) {
+                // ignore
+            }
 
             if (statuses != null) {
                 Path[] paths = new Path[statuses.length];
@@ -813,10 +816,6 @@ public class HdfsBroker {
 
             error = cb.response(listing);
 
-        }
-        catch (FileNotFoundException e) {
-            log.severe("File not found: " + dirName);
-            error = cb.error(Error.DFSBROKER_FILE_NOT_FOUND, e.getMessage());
         }
         catch (IOException e) {
             log.severe("I/O exception while reading directory '" + dirName

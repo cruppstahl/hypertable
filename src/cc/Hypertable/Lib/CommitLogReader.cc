@@ -196,7 +196,8 @@ void CommitLogReader::load_fragments(String log_dir, CommitLogFileInfo *parent) 
     m_fs->readdir(log_dir, listing);
   }
   catch (Hypertable::Exception &e) {
-    if (e.code() == Error::DFSBROKER_BAD_FILENAME) {
+    if (e.code() == Error::DFSBROKER_BAD_FILENAME
+        || e.code() == Error::DFSBROKER_FILE_NOT_FOUND) {
       HT_INFOF("Skipping directory '%s' because it does not exist",
                log_dir.c_str());
       return;
