@@ -2,7 +2,7 @@
 
 HT_HOME=${INSTALL_DIR:-"$HOME/hypertable/current"}
 SCRIPT_DIR=`dirname $0`
-DATA_SIZE=${DATA_SIZE:-"20000000"}
+DATA_SIZE=${DATA_SIZE:-"40000000"}
 
 echo "======================================"
 echo "Row overflow WRITE test (TableMutator)"
@@ -27,8 +27,9 @@ echo "======================================"
 $HT_HOME/bin/start-test-servers.sh --clear \
     --Hypertable.RangeServer.Range.SplitSize=2000000
 $HT_HOME/bin/ht shell --no-prompt < $SCRIPT_DIR/create-table.hql
-$HT_HOME/bin/ht shell --no-prompt --batch < $SCRIPT_DIR/row-overflow.hql \
-    2>&1 | grep -c '^Failed.*row overflow'
+cat $SCRIPT_DIR/row-overflow.hql | $HT_HOME/bin/ht shell --no-prompt --batch
+cat $SCRIPT_DIR/row-overflow.hql | $HT_HOME/bin/ht shell --no-prompt --batch > test.out
+grep -c 'RANGE SERVER row overflow' test.out
 if [ $? -ne "0" ];
 then
     echo "(2) 'row overflow' not found, exiting"
