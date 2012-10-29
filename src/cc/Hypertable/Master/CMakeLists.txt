@@ -91,7 +91,7 @@ target_link_libraries(htgc HyperMaster HyperDfsBroker Hypertable ${RRD_LIBRARIES
 
 add_test(MasterOperation-TestSetup env INSTALL_DIR=${INSTALL_DIR} 
          ${CMAKE_CURRENT_SOURCE_DIR}/tests/op_test_setup.sh)
-add_test(MasterOperation-Proccessor op_dependency_test)
+add_test(MasterOperation-Processor op_dependency_test)
 add_test(MasterOperation-Initialize op_test_driver initialize)
 add_test(MasterOperation-SystemUpgrade op_test_driver system_upgrade)
 add_test(MasterOperation-CreateNamespace op_test_driver create_namespace)
