@@ -72,6 +72,7 @@ namespace Hypertable {
     static std::string    log_dir;
     static LocationInitializerPtr location_initializer;
     static int64_t        range_split_size;
+    static bool           force_default_split_limits;
     static int64_t        range_maximum_size;
     static int32_t        access_group_garbage_compaction_threshold;
     static int32_t        access_group_max_mem;

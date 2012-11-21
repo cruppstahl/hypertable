@@ -106,6 +106,7 @@ RangeServer::RangeServer(PropertiesPtr &props, ConnectionManagerPtr &conn_mgr,
 
   m_verbose = props->get_bool("verbose");
   Global::range_split_size = cfg.get_i64("Range.SplitSize");
+  Global::force_default_split_limits = cfg.get_bool("Range.ForceDefaultSplitLimits");
   Global::range_maximum_size = cfg.get_i64("Range.MaximumSize");
   Global::range_metadata_split_size = cfg.get_i64("Range.MetadataSplitSize", Global::range_split_size);
   Global::access_group_garbage_compaction_threshold = cfg.get_i32("AccessGroup.GarbageThreshold.Percentage");

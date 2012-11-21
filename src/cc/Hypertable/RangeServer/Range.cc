@@ -96,7 +96,7 @@ void Range::initialize() {
     m_log_hash = md5_hash(m_metalog_entity->state.transfer_log);
   }
 
-  memset(m_added_deletes, 0, 3*sizeof(int64_t));
+  memset(m_added_deletes, 0, 3 * sizeof(int64_t));
 
   if (m_metalog_entity->table.is_metadata()) {
     if (m_metalog_entity->state.soft_limit == 0)
@@ -104,11 +104,21 @@ void Range::initialize() {
     m_split_threshold = m_metalog_entity->state.soft_limit;
   }
   else {
-    if (m_metalog_entity->state.soft_limit == 0 || m_metalog_entity->state.soft_limit > (uint64_t)Global::range_split_size)
+    if (m_metalog_entity->state.soft_limit == 0
+        || m_metalog_entity->state.soft_limit > (uint64_t)Global::range_split_size)
       m_metalog_entity->state.soft_limit = Global::range_split_size;
     {
       ScopedLock lock(Global::mutex);
-      m_split_threshold = m_metalog_entity->state.soft_limit + (Random::number64() % m_metalog_entity->state.soft_limit);
+      m_split_threshold = m_metalog_entity->state.soft_limit
+          + (Random::number64() % m_metalog_entity->state.soft_limit);
+
+      /* overwrite the split limits (for debugging row overflow scenarios) */
+      if (Global::force_default_split_limits) {
+        HT_INFOF("Forcing new split threshold/soft limits of %lld",
+                (Lld)Global::range_split_size);
+        m_metalog_entity->state.soft_limit = Global::range_split_size;
+        m_split_threshold = Global::range_split_size;
+      }
     }
   }
 

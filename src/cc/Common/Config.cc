@@ -374,6 +374,8 @@ void DefaultPolicy::init_options() {
         "Maximum size of query cache")
     ("Hypertable.RangeServer.Range.SplitSize", i64()->default_value(256*MiB),
         "Size of range in bytes before splitting")
+    ("Hypertable.RangeServer.Range.ForceDefaultSplitLimits", boo()->default_value(false),
+        "Resets Range's soft_limit and split threshold to the default split size; required for fixing row overflow scenarios")
     ("Hypertable.RangeServer.Range.MaximumSize", i64()->default_value(3*G),
         "Maximum size of a range in bytes before updates get throttled")
     ("Hypertable.RangeServer.Range.MetadataSplitSize", i64(), "Size of METADATA "
