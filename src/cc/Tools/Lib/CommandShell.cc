@@ -133,7 +133,6 @@ CommandShell::CommandShell(const String &program_name,
   }
 
   setlocale(LC_ALL, "");
-<<<<<<< HEAD
 
   /* initialize libedit */
   if (!m_batch_mode) {
@@ -148,22 +147,6 @@ CommandShell::CommandShell(const String &program_name,
     el_wset(m_editline, EL_SIGNAL, 1);
     el_wset(m_editline, EL_EDITOR, L"emacs");
 
-=======
-
-  /* initialize libedit */
-  if (!m_batch_mode) {
-    ms_instance = this;
-    m_editline = el_init("hypertable", stdin, stdout, stderr);
-    m_history = history_winit();
-    history_w(m_history, &m_history_event, H_SETSIZE, 100);
-    history_w(m_history, &m_history_event, H_LOAD, ms_history_file.c_str());
-
-    el_wset(m_editline, EL_HIST, history_w, m_history);
-    el_wset(m_editline, EL_PROMPT, prompt);
-    el_wset(m_editline, EL_SIGNAL, 1);
-    el_wset(m_editline, EL_EDITOR, L"emacs");
-
->>>>>>> issue 958: shell now accepts unicode characters
     /* Source the user's defaults file. */
     el_source(m_editline, NULL);
     m_tokenizer = tok_winit(NULL);

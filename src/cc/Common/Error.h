@@ -230,8 +230,11 @@ namespace Hypertable {
       THRIFTBROKER_BAD_SCANNER_ID         = 0x00090001,
       THRIFTBROKER_BAD_MUTATOR_ID         = 0x00090002,
       THRIFTBROKER_BAD_NAMESPACE_ID       = 0x00090003,
-      THRIFTBROKER_BAD_FUTURE_ID          = 0x00090004
+      THRIFTBROKER_BAD_FUTURE_ID          = 0x00090004,
 
+      COM_EXTENSIONS_START_HERE           = 0x10000000,
+#include "ErrorExtensions.h"
+      COM_EXTENSIONS_STOP_HERE
     };
 
     const char *get_text(int error);

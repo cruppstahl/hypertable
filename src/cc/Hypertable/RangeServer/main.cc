@@ -38,6 +38,8 @@
 #include "AsyncComm/ReactorFactory.h"
 #include "AsyncComm/ReactorRunner.h"
 
+#include "Hypertable/Lib/ClusterIdManager.h"
+
 #include "Config.h"
 #include "ConnectionHandler.h"
 #include "Global.h"
@@ -84,9 +86,7 @@ int main(int argc, char **argv) {
     int worker_count = get_i32("Hypertable.RangeServer.Workers");
     ApplicationQueuePtr app_queue = new ApplicationQueue(worker_count);
 
-    /**
-     * Connect to Hyperspace
-     */
+    // Connect to Hyperspace
     HyperspaceSessionHandler hs_handler;
     Global::hyperspace = new Hyperspace::Session(comm, properties);
     Global::hyperspace->add_callback(&hs_handler);
@@ -97,7 +97,12 @@ int main(int argc, char **argv) {
       _exit(1);
     }
 
-    RangeServerPtr range_server= new RangeServer(properties,
+    // read the cluster id
+    ClusterIdManager idmgr(Global::hyperspace, properties);
+    Global::cluster_id = idmgr.get_local_id();
+    HT_ASSERT(Global::cluster_id != 0);
+
+    RangeServerPtr range_server = new RangeServer(properties,
         conn_manager, app_queue, Global::hyperspace);
 
     // install maintenance timer

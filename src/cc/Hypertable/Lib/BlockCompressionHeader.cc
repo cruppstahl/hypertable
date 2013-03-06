@@ -64,6 +64,10 @@ void BlockCompressionHeader::decode(const uint8_t **bufp, size_t *remainp) {
   const uint8_t *base = *bufp;
   uint16_t header_length;
 
+  // read the magic; it will help us distinguish between old and new
+  // headers (required for the checksum)
+  memcpy(m_magic, *bufp, 10);
+
   if (*remainp < length())
     HT_THROW(Error::BLOCK_COMPRESSOR_TRUNCATED, "");
 
@@ -71,14 +75,21 @@ void BlockCompressionHeader::decode(const uint8_t **bufp, size_t *remainp) {
   uint16_t header_checksum, header_checksum_computed;
   size_t remaining = 2;
   const uint8_t *ptr = *bufp + length() - 2;
-  header_checksum_computed = fletcher32(*bufp, length() - 2);
+
   header_checksum = decode_i16(&ptr, &remaining);
+  header_checksum_computed = fletcher32(*bufp, length() - 2);
 
-  if (header_checksum_computed != header_checksum)
-    HT_THROWF(Error::BLOCK_COMPRESSOR_BAD_HEADER, "Header checksum mismatch at %p: %u (computed) != %u (stored)",
-              *bufp, (unsigned)header_checksum_computed, (unsigned)header_checksum);
+  if (header_checksum_computed != header_checksum) {
+    String s(m_magic, m_magic + 10);
+    HT_ERROR_OUT << "bad checksum for header " << s << HT_END;
 
-  memcpy(m_magic, *bufp, 10);
+    HT_THROWF(Error::BLOCK_COMPRESSOR_BAD_HEADER,
+            "Header checksum mismatch at %p: %u (computed) != %u (stored)",
+            *bufp, (unsigned)header_checksum_computed,
+            (unsigned)header_checksum);
+  }
+
+  // skip the magic
   (*bufp) += 10;
   *remainp -= 10;
 

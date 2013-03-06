@@ -42,6 +42,7 @@ extern "C" {
 
 #include "Hypertable/Lib/Config.h"
 #include "Hypertable/Lib/MetaLogReader.h"
+#include "Hypertable/Lib/ClusterIdManager.h"
 #include "DfsBroker/Lib/Client.h"
 
 #include "ConnectionHandler.h"
@@ -59,6 +60,7 @@ extern "C" {
 #include "ReferenceManager.h"
 #include "ResponseManager.h"
 #include "BalancePlanAuthority.h"
+#include "Extensions.h"
 
 using namespace Hypertable;
 using namespace Config;
@@ -176,6 +178,19 @@ int main(int argc, char **argv) {
         FailureInducer::instance = new FailureInducer();
       FailureInducer::instance->parse_option(get_str("induce-failure"));
     }
+
+    /* assign a new cluster id if necessary */
+    ClusterIdManager idmgr(context->hyperspace, context->props);
+    uint64_t cluster_id = idmgr.get_local_id();
+    if (!cluster_id) {
+      cluster_id = idmgr.assign_new_local_id();
+      HT_INFO_OUT << "Assigning new cluster id " << cluster_id << HT_END;
+    }
+    else
+      HT_INFO_OUT << "Cluster id is " << cluster_id << HT_END;
+
+    /* initialize extensions */
+    Extensions::initialize(context->props);
 
     /**
      * Read/load MML

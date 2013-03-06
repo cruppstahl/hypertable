@@ -491,7 +491,7 @@ void create_table_test(ContextPtr &context) {
            expected_operations, expected_servers);
 
   expected_operations.clear();
-  expected_operations.insert( std::pair<String, int32_t>("OperationCreateTable", OperationState::ASSIGN_ID) );
+  expected_operations.insert( std::pair<String, int32_t>("OperationCreateTable", OperationState::WRITE_METADATA) );
   run_test(context, log_dir, entities, "create-table-WRITE_METADATA-a:throw:0",
            expected_operations, expected_servers);
 

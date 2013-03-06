@@ -32,6 +32,7 @@
 #include "DispatchHandlerOperationAlterTable.h"
 #include "OperationAlterTable.h"
 #include "Utility.h"
+#include "Extensions.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -108,6 +109,7 @@ void OperationAlterTable::execute() {
         HT_THROW(Error::MASTER_BAD_SCHEMA, alter_schema->get_error_string());
       if (alter_schema->need_id_assignment())
         HT_THROW(Error::MASTER_BAD_SCHEMA, "Updated schema needs ID assignment");
+      Extensions::validate_alter_table_schema(alter_schema);
 
       filename = m_context->toplevel_dir + "/tables/" + m_id;
 
@@ -181,8 +183,16 @@ void OperationAlterTable::execute() {
       m_context->mml_writer->record_state(this);
       return;
     }
+    set_state(OperationState::COM_EXTENSION_1);
+    m_context->mml_writer->record_state(this);
+    // fall through
+
+  case OperationState::COM_EXTENSION_1:
+    if (!Extensions::alter_table_extension(this, m_schema, m_name, m_id))
+      return;
     set_state(OperationState::UPDATE_HYPERSPACE);
     m_context->mml_writer->record_state(this);
+    // fall through
 
   case OperationState::UPDATE_HYPERSPACE:
     {

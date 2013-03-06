@@ -95,6 +95,7 @@ namespace Hypertable {
     // to the current memory situation
     static int64_t        memory_limit_ensure_unused_current;
     static uint64_t       access_counter;
+    static uint64_t       cluster_id;
     static bool           enable_shadow_cache;
     static std::string    toplevel_dir;
     static int32_t        metrics_interval;

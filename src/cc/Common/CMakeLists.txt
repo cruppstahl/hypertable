@@ -55,6 +55,7 @@ Usage.cc
 Version.cc
 WordStream.cc
 md5.cc
+Extensions.cc
 )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "SunOS")

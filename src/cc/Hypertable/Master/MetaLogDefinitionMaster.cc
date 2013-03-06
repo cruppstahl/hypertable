@@ -105,7 +105,9 @@ Entity *DefinitionMaster::create(uint16_t log_version, const EntityHeader &heade
       operation->set_original_type(EntityType::OLD_OPERATION_MOVE_RANGE);
     }
     else if (header.type == EntityType::OLD_OPERATION_BALANCE) {
-      return 0;
+      ((EntityHeader *)&header)->type = EntityType::OPERATION_BALANCE;
+      operation = new OperationBalance(m_context, header);
+      operation->set_original_type(EntityType::OLD_OPERATION_BALANCE);
     }
   }
   else if (header.type == EntityType::BALANCE_PLAN_AUTHORITY) {

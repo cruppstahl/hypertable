@@ -256,7 +256,7 @@ namespace Hyperspace {
      * @param name absolute pathname of directory to create
      * @param timer maximum wait timer
      */
-    void mkdir(const std::string &name, Timer *timer=0);
+    void mkdir(const std::string &name, Timer *timer = 0);
 
     /**
      * Creates a directory.  The name

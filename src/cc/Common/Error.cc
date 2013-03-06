@@ -21,6 +21,7 @@
 
 #include "Common/Compat.h"
 #include "Common/HashMap.h"
+#include "Common/Extensions.h"
 
 #include "Error.h"
 
@@ -288,15 +289,19 @@ namespace {
     { Error::THRIFTBROKER_BAD_MUTATOR_ID, "THRIFT BROKER bad mutator id" },
     { Error::THRIFTBROKER_BAD_NAMESPACE_ID, "THRIFT BROKER bad namespace id" },
     { Error::THRIFTBROKER_BAD_FUTURE_ID,    "THRIFT BROKER bad future id" },
+
+    { Error::COM_EXTENSIONS_START_HERE,    "RESERVED do not use" },
     { 0, 0 }
   };
 
-  typedef hash_map<int, const char *>  TextMap;
+  typedef hash_map<int, const char *> TextMap;
 
   TextMap &build_text_map() {
     TextMap *map = new TextMap();
-    for (int i=0; error_info[i].text != 0; i++)
+    for (int i = 0; error_info[i].text != 0; i++)
       (*map)[error_info[i].code] = error_info[i].text;
+
+    Extensions::build_text_map(map);
     return *map;
   }
 

@@ -63,7 +63,9 @@ namespace Hypertable {
       PREPARE = 20,
       COMMIT = 21,
       PHANTOM_LOAD = 22,
-      REPLAY_FRAGMENTS = 23
+      REPLAY_FRAGMENTS = 23,
+
+      COM_EXTENSION_1
     };
     const char *get_text(int state);
   }
@@ -162,6 +164,7 @@ namespace Hypertable {
 
     int32_t get_original_type() { return m_original_type; }
     void set_original_type(int32_t original_type) { m_original_type = original_type; }
+    ContextPtr &get_context() { return m_context; }
 
   protected:
     Mutex m_mutex;

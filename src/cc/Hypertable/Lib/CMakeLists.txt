@@ -31,6 +31,7 @@ BlockCompressionHeader.cc
 BlockCompressionHeaderCommitLog.cc
 Cell.cc
 Client.cc
+ClusterIdManager.cc
 CommitLog.cc
 CommitLogBase.cc
 CommitLogBlockStream.cc

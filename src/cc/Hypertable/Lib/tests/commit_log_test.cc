@@ -53,10 +53,8 @@ namespace {
 
   typedef Meta::list<MyPolicy, DfsClientPolicy, DefaultCommPolicy> Policies;
 
-  void test1(DfsBroker::Client *dfs_client);
-  void test_link(DfsBroker::Client *dfs_client);
-  void write_entries(CommitLog *log, int num_entries, uint64_t *sump,
-                     CommitLogBase *link_log);
+  void test_link(DfsBroker::Client *dfs_client, bool legacy);
+  void write_entries(CommitLog *log, uint64_t *sump, CommitLogBase *link_log);
   void read_entries(DfsBroker::Client *dfs_client, CommitLogReader *log_reader,
                     uint64_t *sump);
 }
@@ -83,8 +81,13 @@ int main(int argc, char **argv) {
 
     srandom(1);
 
-    //test1(dfs);
-    test_link(dfs.get());
+    std::cout << "running tests (with cluster ID, new format)" << std::endl;
+    test_link(dfs.get(), false);
+
+    std::cout << "\n\n\nrunning legacy tests (without cluster ID, old format)"
+        << std::endl;
+    test_link(dfs.get(), true);
+
   }
   catch (Exception &e) {
     HT_ERROR_OUT << e << HT_END;
@@ -97,42 +100,7 @@ int main(int argc, char **argv) {
 
 namespace {
 
-  void test1(DfsBroker::Client *dfs_client) {
-    String log_dir = "/hypertable/test_log";
-    String fname;
-    CommitLog *log;
-    CommitLogReader *log_reader;
-    uint64_t sum_written = 0;
-    uint64_t sum_read = 0;
-
-    // Remove /hypertable/test_log
-    dfs_client->rmdir(log_dir);
-
-    fname = log_dir + "/c";
-
-    // Create /hypertable/test_log/c
-    dfs_client->mkdirs(fname);
-
-    FilesystemPtr fs = dfs_client;
-
-    log = new CommitLog(fs, fname, properties);
-
-    write_entries(log, 20, &sum_written, 0);
-
-    log->close();
-
-    delete log;
-
-    log_reader = new CommitLogReader(fs, fname);
-
-    read_entries(dfs_client, log_reader, &sum_read);
-
-    delete log_reader;
-
-    HT_ASSERT(sum_read == sum_written);
-  }
-
-  void test_link(DfsBroker::Client *dfs_client) {
+  void test_link(DfsBroker::Client *dfs_client, bool legacy) {
     String log_dir = "/hypertable/test_log";
     String fname;
     CommitLog *log;
@@ -155,7 +123,9 @@ namespace {
      */
     fname = log_dir + "/c";
     log = new CommitLog(fs, fname, properties);
-    write_entries(log, 20, &sum_written, 0);
+    if (legacy)
+      log->force_legacy();
+    write_entries(log, &sum_written, 0);
     delete log;
 
     log_reader_ptr = new CommitLogReader(fs, fname);
@@ -166,7 +136,9 @@ namespace {
      */
     fname = log_dir + "/b";
     log = new CommitLog(fs, fname, properties);
-    write_entries(log, 20, &sum_written, log_reader_ptr.get());
+    if (legacy)
+      log->force_legacy();
+    write_entries(log, &sum_written, log_reader_ptr.get());
     delete log;
 
     /**
@@ -174,7 +146,9 @@ namespace {
      */
     fname = log_dir + "/d";
     log = new CommitLog(fs, fname, properties);
-    write_entries(log, 20, &sum_written, 0);
+    if (legacy)
+      log->force_legacy();
+    write_entries(log, &sum_written, 0);
     delete log;
 
     /**
@@ -182,18 +156,20 @@ namespace {
      */
     fname = log_dir + "/a";
     log = new CommitLog(fs, fname, properties);
+    if (legacy)
+      log->force_legacy();
 
     // Open "b", read it, and link it into "a"
     fname = log_dir + "/b";
     log_reader_ptr = new CommitLogReader(fs, fname);
     read_entries(dfs_client, log_reader_ptr.get(), &sum_read);
-    write_entries(log, 20, &sum_written, log_reader_ptr.get());
+    write_entries(log, &sum_written, log_reader_ptr.get());
 
     // Open "d", read it, and link it into "a"
     fname = log_dir + "/d";
     log_reader_ptr = new CommitLogReader(fs, fname);
     read_entries(dfs_client, log_reader_ptr.get(), &sum_read);
-    write_entries(log, 20, &sum_written, log_reader_ptr.get());
+    write_entries(log, &sum_written, log_reader_ptr.get());
 
     delete log;
 
@@ -206,8 +182,7 @@ namespace {
   }
 
   void
-  write_entries(CommitLog *log, int num_entries, uint64_t *sump,
-                CommitLogBase *link_log) {
+  write_entries(CommitLog *log, uint64_t *sump, CommitLogBase *link_log) {
     int error;
     int64_t revision;
     uint32_t limit;
@@ -218,7 +193,7 @@ namespace {
     if (link_log)
       link_point = random() % 50;
 
-    for (size_t i=0; i<50; i++) {
+    for (size_t i = 0; i < 50; i++) {
       revision = log->get_timestamp();
 
       if (i == link_point) {
@@ -227,7 +202,7 @@ namespace {
       }
       else {
         limit = (random() % 100) + 1;
-        for (size_t j=0; j<limit; j++) {
+        for (size_t j = 0; j < limit; j++) {
           payload[j] = random();
           *sump += payload[j];
         }
@@ -236,7 +211,7 @@ namespace {
         dbuf.ptr = dbuf.base + (4*limit);
         dbuf.own = false;
 
-        if ((error = log->write(dbuf, revision)) != Error::OK)
+        if ((error = log->write(dbuf, revision, 0xf0f0f0)) != Error::OK)
           HT_THROW(error, "Problem writing to log file");
       }
     }
@@ -255,7 +230,7 @@ namespace {
       assert((block_len % 4) == 0);
       icount = block_len / 4;
       iptr = (uint32_t *)block;
-      for (size_t i=0; i<icount; i++)
+      for (size_t i = 0; i < icount; i++)
         *sump += iptr[i];
     }
   }

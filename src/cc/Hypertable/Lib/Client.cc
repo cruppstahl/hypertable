@@ -173,6 +173,10 @@ NameIdMapperPtr Client::get_nameid_mapper() {
   return m_namemap;
 }
 
+PropertiesPtr &Client::get_properties() {
+  return m_props;
+}
+
 void Client::close() {
   HT_WARN("close() is no longer supported");
 }

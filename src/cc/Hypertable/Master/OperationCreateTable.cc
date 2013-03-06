@@ -32,6 +32,7 @@
 #include "BalancePlanAuthority.h"
 #include "OperationCreateTable.h"
 #include "Utility.h"
+#include "Extensions.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -163,7 +164,6 @@ void OperationCreateTable::execute() {
     }
 
     set_state(OperationState::CREATE_QUALIFIER_INDEX);
-
     // fall through
 
   case OperationState::CREATE_QUALIFIER_INDEX:
@@ -197,11 +197,17 @@ void OperationCreateTable::execute() {
       }
 
       HT_MAYBE_FAIL("create-table-CREATE_QUALIFIER_INDEX");
-      set_state(OperationState::WRITE_METADATA);
+      set_state(OperationState::COM_EXTENSION_1);
       return;
     }
+    set_state(OperationState::COM_EXTENSION_1);
+    // fall through
+
+  case OperationState::COM_EXTENSION_1:
+    if (!Extensions::create_table_extension(this, m_schema, m_name, m_table))
+      return;
     set_state(OperationState::WRITE_METADATA);
-    
+    m_context->mml_writer->record_state(this);
     // fall through
 
   case OperationState::WRITE_METADATA:

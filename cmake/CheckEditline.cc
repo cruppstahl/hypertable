@@ -17,6 +17,7 @@
  * along with Hypertable. If not, see <http://www.gnu.org/licenses/>
  */
 
+#include <stdio.h>
 #include <editline/readline.h>
 #include <histedit.h>
 

@@ -83,7 +83,7 @@ void OperationGatherStatistics::execute() {
       FileUtils::rename(filename_tmp, filename);
     dot_cmd = format("dot -Tjpg -Gcharset=latin1 -o%s/mop.tmp.jpg %s/mop.dot",
                      monitoring_dir.c_str(), monitoring_dir.c_str());
-    if (system(dot_cmd.c_str()) != -1) {
+    if (system(dot_cmd.c_str()) == 0) {
       filename = monitoring_dir + "/mop.jpg";
       filename_tmp = monitoring_dir + "/mop.tmp.jpg";
       FileUtils::rename(filename_tmp, filename);

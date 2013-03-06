@@ -27,6 +27,7 @@
 #include "Common/FileUtils.h"
 #include "Common/Config.h"
 #include "Common/SystemInfo.h"
+#include "Common/Extensions.h"
 
 #include <iostream>
 #include <fstream>
@@ -396,6 +397,9 @@ void DefaultPolicy::init_options() {
         "Host of DFS Broker to use for Commit Log")
     ("Hypertable.RangeServer.CommitLog.DfsBroker.Port", i16(),
         "Port of DFS Broker to use for Commit Log")
+    ("Hypertable.RangeServer.CommitLog.FragmentRemoval.Disable",
+         boo()->default_value(false),
+        "Removes purged CommitLog fragments when they are no longer required")
     ("Hypertable.RangeServer.CommitLog.FragmentRemoval.RangeReferenceRequired", boo()->default_value(true),
         "Only remove linked log fragments if they're part of a transfer log referenced by a range")
     ("Hypertable.RangeServer.CommitLog.PruneThreshold.Min", i64()->default_value(1*G),
@@ -474,6 +478,9 @@ void DefaultPolicy::init_options() {
         "Hypertable.CommitLog.RollLimit");
   alias("Hypertable.RangeServer.CommitLog.Compressor",
         "Hypertable.CommitLog.Compressor");
+
+  Extensions::add_configuration();
+
   // add config file desc to cmdline hidden desc, so people can override
   // any config values on the command line
   cmdline_hidden_desc().add(file_desc());

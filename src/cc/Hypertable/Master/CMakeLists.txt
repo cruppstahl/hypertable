@@ -24,6 +24,7 @@ BalanceAlgorithmOffload.cc
 BalancePlanAuthority.cc
 ConnectionHandler.cc
 Context.cc
+Extensions.cc
 GcWorker.cc
 DispatchHandlerOperation.cc
 DispatchHandlerOperationGetStatistics.cc

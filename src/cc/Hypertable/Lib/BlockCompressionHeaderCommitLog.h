@@ -32,21 +32,30 @@ namespace Hypertable {
   class BlockCompressionHeaderCommitLog : public BlockCompressionHeader {
 
   public:
-
-    static const size_t LENGTH = BlockCompressionHeader::LENGTH + 8;
-
     BlockCompressionHeaderCommitLog();
-    BlockCompressionHeaderCommitLog(const char *magic, int64_t revision);
+    BlockCompressionHeaderCommitLog(const char *magic, int64_t revision,
+            uint64_t cluster_id);
 
     void set_revision(int64_t revision) { m_revision = revision; }
     int64_t get_revision() { return m_revision; }
+    void set_cluster_id(uint64_t cluster_id) { m_cluster_id = cluster_id; }
+    uint64_t get_cluster_id() { return m_cluster_id; }
 
-    virtual size_t length() { return LENGTH; }
-    virtual void   encode(uint8_t **bufp);
-    virtual void   decode(const uint8_t **bufp, size_t *remainp);
+    bool is_legacy() { return (get_magic()[9] != '2'); }
+
+    virtual size_t length() {
+      return is_legacy()
+          ? BlockCompressionHeader::LENGTH + 8
+          : BlockCompressionHeader::LENGTH + 16;
+    }
+
+    virtual void encode(uint8_t **bufp);
+    virtual void decode(const uint8_t **bufp, size_t *remainp);
+    void decode_cluster_id(const uint8_t **bufp, size_t *remainp);
 
   private:
     int64_t m_revision;
+    uint64_t m_cluster_id;
   };
 
 }

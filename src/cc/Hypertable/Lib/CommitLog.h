@@ -80,8 +80,10 @@ namespace Hypertable {
      */
     CommitLog(FilesystemPtr &fs, const String &log_dir,
               PropertiesPtr &props, CommitLogBase *init_log = 0,
-              bool is_meta=true)
-      : CommitLogBase(log_dir), m_fs(fs) {
+              bool is_meta = true)
+      : CommitLogBase(log_dir), m_fs(fs), m_force_legacy(false) {
+      const char *c = "Hypertable.RangeServer.CommitLog.FragmentRemoval.Disable";
+      m_purge_fragments = !props->get_bool(c);
       initialize(log_dir, props, init_log, is_meta);
     }
 
@@ -92,7 +94,7 @@ namespace Hypertable {
      * @param log_dir directory of the commit log
      * @param is_meta true for root, system and metadata logs
      */
-    CommitLog(FilesystemPtr &fs, const String &log_dir, bool is_meta=true);
+    CommitLog(FilesystemPtr &fs, const String &log_dir, bool is_meta = true);
 
     virtual ~CommitLog();
 
@@ -107,10 +109,12 @@ namespace Hypertable {
      *
      * @param buffer block of updates to commit
      * @param revision most recent revision in buffer
+     * @param cluster_id ID of the originating cluster
      * @param sync syncs the commit log updates to disk
      * @return Error::OK on success or error code on failure
      */
-    int write(DynamicBuffer &buffer, int64_t revision, bool sync=true);
+    int write(DynamicBuffer &buffer, int64_t revision, uint64_t cluster_id,
+            bool sync = true);
 
     /** Sync previous updates written to commit log.
      *
@@ -184,8 +188,14 @@ namespace Hypertable {
       return m_cur_fragment_fname;
     }
 
-    static const char MAGIC_DATA[10];
-    static const char MAGIC_LINK[10];
+    // for testing: write legacy headers (without cluster ID)
+    void force_legacy() { m_force_legacy = true; }
+
+    static const char MAGIC_LINK1[10];      // old, legacy
+    static const char MAGIC_DATA1[10];
+    static const char MAGIC_LINK2[10];      // new, includes cluster ID
+    static const char MAGIC_DATA2[10];
+    static const char MAGIC_EOF[10];        // new EOF marker
 
   private:
     void initialize(const String &log_dir,
@@ -193,6 +203,7 @@ namespace Hypertable {
     int roll(CommitLogFileInfo **clfip=0);
     int compress_and_write(DynamicBuffer &input, BlockCompressionHeader *header,
                            int64_t revision, bool sync);
+    void append_eof();
     void remove_file_info(CommitLogFileInfo *fi);
 
     FilesystemPtr           m_fs;
@@ -206,6 +217,8 @@ namespace Hypertable {
     int32_t                 m_fd;
     int32_t                 m_replication;
     bool                    m_needs_roll;
+    bool                    m_force_legacy;
+    bool                    m_purge_fragments;
   };
 
   typedef intrusive_ptr<CommitLog> CommitLogPtr;

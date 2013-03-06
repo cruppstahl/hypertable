@@ -151,8 +151,8 @@ namespace {
     uint32_t blockno=0;
 
     while (log_reader->next(&base, &len, &header)) {
-
-      HT_ASSERT(header.check_magic(CommitLog::MAGIC_DATA));
+      HT_ASSERT(header.check_magic(CommitLog::MAGIC_DATA1)
+              || header.check_magic(CommitLog::MAGIC_DATA2));
 
       ptr = base;
       end = base + len;
@@ -187,8 +187,6 @@ namespace {
     }
   }
 
-
-
   void
   display_log_block_summary(DfsBroker::Client *dfs_client, const String &prefix,
       CommitLogReader *log_reader) {
@@ -196,8 +194,8 @@ namespace {
     BlockCompressionHeaderCommitLog header;
 
     while (log_reader->next_raw_block(&binfo, &header)) {
-
-      HT_ASSERT(header.check_magic(CommitLog::MAGIC_DATA));
+      HT_ASSERT(header.check_magic(CommitLog::MAGIC_DATA1)
+              || header.check_magic(CommitLog::MAGIC_DATA2));
 
       printf("%s%s\trevision\t%llu\n",
              binfo.log_dir, binfo.file_fragment, (Llu)header.get_revision());

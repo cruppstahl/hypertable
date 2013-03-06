@@ -43,14 +43,22 @@
 
 using namespace Hypertable;
 
-const char CommitLog::MAGIC_DATA[10] =
+const char CommitLog::MAGIC_DATA1[10] =
     { 'C','O','M','M','I','T','D','A','T','A' };
-const char CommitLog::MAGIC_LINK[10] =
+const char CommitLog::MAGIC_DATA2[10] =
+    { 'C','O','M','M','I','T','D','A','T','2' };
+const char CommitLog::MAGIC_LINK1[10] =
     { 'C','O','M','M','I','T','L','I','N','K' };
+const char CommitLog::MAGIC_LINK2[10] =
+    { 'C','O','M','M','I','T','L','I','N','2' };
+const char CommitLog::MAGIC_EOF[10] =
+    { 'C','O','M','M','I','T','E','O','F','1' };
 
 
 CommitLog::CommitLog(FilesystemPtr &fs, const String &log_dir, bool is_meta)
-  : CommitLogBase(log_dir), m_fs(fs) {
+  : CommitLogBase(log_dir), m_fs(fs), m_force_legacy(false) {
+  const char *c = "Hypertable.RangeServer.CommitLog.FragmentRemoval.Disable";
+  m_purge_fragments = !Config::properties->get_bool(c);
   initialize(log_dir, Config::properties, 0, is_meta);
 }
 
@@ -101,7 +109,7 @@ CommitLog::initialize(const String &log_dir, PropertiesPtr &props,
     uint32_t num;
     std::vector<String> listing;
     m_fs->readdir(m_log_dir, listing);
-    for (size_t i=0; i<listing.size(); i++) {
+    for (size_t i = 0; i < listing.size(); i++) {
       num = atoi(listing[i].c_str());
       if (num >= m_cur_fragment_num)
         m_cur_fragment_num = num + 1;
@@ -157,9 +165,13 @@ CommitLog::sync() {
   return error;
 }
 
-int CommitLog::write(DynamicBuffer &buffer, int64_t revision, bool sync) {
+int CommitLog::write(DynamicBuffer &buffer, int64_t revision,
+        uint64_t cluster_id, bool sync) {
   int error;
-  BlockCompressionHeaderCommitLog header(MAGIC_DATA, revision);
+  BlockCompressionHeaderCommitLog header(
+          m_force_legacy ? MAGIC_DATA1 : MAGIC_DATA2,
+          revision,
+          m_force_legacy ? 0 : cluster_id);
 
   if (m_needs_roll) {
     ScopedLock lock(m_mutex);
@@ -190,13 +202,16 @@ int CommitLog::link_log(CommitLogBase *log_base) {
   ScopedLock lock(m_mutex);
   int error;
   int64_t link_revision = log_base->get_latest_revision();
-  BlockCompressionHeaderCommitLog header(MAGIC_LINK, link_revision);
+  BlockCompressionHeaderCommitLog header(
+          m_force_legacy ? MAGIC_LINK1 : MAGIC_LINK2,
+          link_revision, 0);
 
   DynamicBuffer input;
   String &log_dir = log_base->get_log_dir();
 
   if (m_linked_logs.count(md5_hash(log_dir.c_str())) > 0) {
-    HT_WARNF("Skipping log %s because it is already linked in", log_dir.c_str());
+    HT_WARNF("Skipping log %s because it is already linked in",
+            log_dir.c_str());
     return Error::OK;
   }
 
@@ -206,7 +221,8 @@ int CommitLog::link_log(CommitLogBase *log_base) {
   }
 
   HT_INFOF("clgc Linking log %s into fragment %d; link_rev=%lld latest_rev=%lld",
-           log_dir.c_str(), m_cur_fragment_num, (Lld)link_revision, (Lld)m_latest_revision);
+           log_dir.c_str(), m_cur_fragment_num, (Lld)link_revision,
+           (Lld)m_latest_revision);
 
   HT_ASSERT(link_revision > 0);
 
@@ -219,7 +235,7 @@ int CommitLog::link_log(CommitLogBase *log_base) {
   header.set_compression_type(BlockCompressionCodec::NONE);
   header.set_data_length(log_dir.length() + 1);
   header.set_data_zlength(log_dir.length() + 1);
-  header.set_data_checksum(fletcher32(log_dir.c_str(), log_dir.length()+1));
+  header.set_data_checksum(fletcher32(log_dir.c_str(), log_dir.length() + 1));
 
   header.encode(&input.ptr);
   input.add(log_dir.c_str(), log_dir.length() + 1);
@@ -232,7 +248,7 @@ int CommitLog::link_log(CommitLogBase *log_base) {
     if (m_fd == -1)
       return Error::CLOSED;
 
-    m_fs->append(m_fd, send_buf, false);
+    m_fs->append(m_fd, send_buf, true);
     m_cur_fragment_length += amount;
 
     if ((error = roll(&file_info)) != Error::OK)
@@ -265,11 +281,47 @@ int CommitLog::link_log(CommitLogBase *log_base) {
 }
 
 
+void CommitLog::append_eof() {
+  // don't lock m_mutex; it was locked by the caller
+  //
+  // don't write EOF tag if the file is empty
+  if (m_cur_fragment_length == 0)
+    return;
+
+  BlockCompressionHeaderCommitLog header(MAGIC_EOF, m_latest_revision, 0);
+
+  DynamicBuffer input;
+
+  HT_INFOF("Adding EOF marker into fragment %s/%d; latest_rev=%lld",
+           get_log_dir().c_str(), m_cur_fragment_num, (Lld)m_latest_revision);
+
+  input.ensure(header.length());
+
+  header.set_revision(m_latest_revision);
+  header.set_compression_type(BlockCompressionCodec::NONE);
+  header.set_data_length(0);
+  header.set_data_zlength(0);
+  header.set_data_checksum(0);
+
+  header.encode(&input.ptr);
+
+  size_t amount = input.fill();
+  StaticBuffer send_buf(input);
+
+  if (m_fd == -1)
+    HT_THROW(Error::CLOSED, "CommitLog was already closed");;
+
+  m_fs->append(m_fd, send_buf, true);
+  m_cur_fragment_length += amount;
+}
+
+
 int CommitLog::close() {
   ScopedLock lock(m_mutex);
 
   try {
     if (m_fd >= 0) {
+      append_eof();
       m_fs->close(m_fd);
       m_fd = -1;
     }
@@ -313,7 +365,8 @@ void CommitLog::remove_linked_log(const String &log_dir) {
  * loaded.  When the RS came up again, it removed the transfer log
  * prematurely, resulting in data loss.
  */
-int CommitLog::purge(int64_t revision, std::set<int64_t> remove_ok, int generation) {
+int CommitLog::purge(int64_t revision, std::set<int64_t> remove_ok,
+        int generation) {
   ScopedLock lock(m_mutex);
 
   if (m_fd == -1)
@@ -368,8 +421,16 @@ void CommitLog::remove_file_info(CommitLogFileInfo *fi) {
   // Remove linked log directores
   foreach_ht (const String &logdir, fi->purge_dirs) {
     try {
-      HT_INFOF("Removing linked log directory '%s' because all fragments have been removed", logdir.c_str());
-      m_fs->rmdir(logdir);
+      HT_INFOF("Removing linked log directory '%s' because all fragments "
+              "have been removed", logdir.c_str());
+      if (m_purge_fragments)
+        m_fs->rmdir(logdir);
+      else {
+        // directory will be purged by Replication.Master
+        int32_t fd = m_fs->create(logdir + "/purged-directory",
+                        Filesystem::OPEN_FLAG_OVERWRITE, 0, -1, -1);
+        m_fs->close(fd);
+      }
     }
     catch (Exception &e) {
       HT_ERRORF("Problem removing log directory '%s' (%s - %s)",
@@ -377,11 +438,21 @@ void CommitLog::remove_file_info(CommitLogFileInfo *fi) {
     }
   }
 
-  // Remove log fragment
+  // Purge the log fragment: either delete it or (if replication is enabled)
+  // rename it to .purged
   try {
     fname = fi->log_dir + "/" + fi->num;
-    HT_INFOF("Removing log fragment '%s' revision=%lld", fname.c_str(), (Lld)fi->revision);
-    m_fs->remove(fname);
+
+    if (!m_purge_fragments) {
+      HT_INFOF("Renaming log fragment '%s' revision=%lld", fname.c_str(),
+              (Lld)fi->revision);
+      m_fs->rename(fname, fname + ".purged");
+    }
+    else {
+      HT_INFOF("Removing log fragment '%s' revision=%lld", fname.c_str(),
+              (Lld)fi->revision);
+      m_fs->remove(fname);
+    }
   }
   catch (Exception &e) {
     HT_ERRORF("Problem removing log fragment '%s' (%s - %s)",
@@ -396,7 +467,6 @@ void CommitLog::remove_file_info(CommitLogFileInfo *fi) {
     HT_ASSERT(fi->parent->references > 0);
     fi->parent->references--;
   }
-
 }
 
 
@@ -416,6 +486,7 @@ int CommitLog::roll(CommitLogFileInfo **clfip) {
 
   if (m_fd >= 0) {
     try {
+      append_eof();
       m_fs->close(m_fd);
     }
     catch (Exception &e) {

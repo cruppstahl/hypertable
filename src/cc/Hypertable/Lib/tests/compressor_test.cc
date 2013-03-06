@@ -49,7 +49,7 @@ namespace {
   };
 }
 
-const char MAGIC[12] = { '-','-','-','-','-','-','-','-','-','-','-','-' };
+const char MAGIC[10] = { '-','-','-','-','-','-','-','-','-','2' };
 
 int main(int argc, char **argv) {
   off_t len;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
   DynamicBuffer output2(0);
   BlockCompressionCodec *compressor;
 
-  BlockCompressionHeaderCommitLog header(MAGIC, 0);
+  BlockCompressionHeaderCommitLog header(MAGIC, 1, 2);
 
   if (argc == 1 || !strcmp(argv[1], "--help"))
     Usage::dump_and_exit(usage);

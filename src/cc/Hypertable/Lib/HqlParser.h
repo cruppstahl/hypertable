@@ -267,15 +267,14 @@ namespace Hypertable {
 
     class ParserState {
     public:
-      ParserState() : command(0), group_commit_interval(0), table_blocksize(0),
-                      table_replication(-1), table_in_memory(false), 
-                      max_versions(0), time_order_desc(false), ttl(0), 
-                      load_flags(0), flags(0), cf(0), ag(0), nanoseconds(0),
-                      decimal_seconds(0), delete_all_columns(false),
-                      delete_time(0), delete_version_time(0),
-                      if_exists(false), tables_only(false), with_ids(false),
-                      replay(false), scanner_id(-1), row_uniquify_chars(0),
-                      escape(true), nokeys(false) {
+      ParserState()
+        : command(0), group_commit_interval(0), table_blocksize(0),
+          table_replication(-1), table_in_memory(false), max_versions(0),
+          time_order_desc(false), ttl(0), load_flags(0), flags(0), cf(0),
+          ag(0), nanoseconds(0), decimal_seconds(0), delete_all_columns(false),
+          delete_time(0), delete_version_time(0), if_exists(false),
+          tables_only(false), with_ids(false), replay(false), scanner_id(-1),
+          row_uniquify_chars(0), escape(true), nokeys(false) {
         memset(&tmval, 0, sizeof(tmval));
       }
       int command;
@@ -336,7 +335,7 @@ namespace Hypertable {
       String current_column_family;
 
       void validate_function(const String &s) {
-        if (s=="guid")
+        if (s == "guid")
           return;
         HT_THROW(Error::HQL_PARSE_ERROR, String("Unknown function "
                 "identifier '") + s + "()'");
@@ -355,8 +354,8 @@ namespace Hypertable {
       }
 
       void execute_function(std::string &s) {
-        if (s=="guid") {
-          s=HyperAppHelper::generate_guid();
+        if (s == "guid") {
+          s = HyperAppHelper::generate_guid();
           return;
         }
 

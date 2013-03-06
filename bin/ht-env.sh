@@ -25,6 +25,9 @@ if [ "e$RUNTIME_ROOT" == "e" ]; then
   RUNTIME_ROOT=$HYPERTABLE_HOME
 fi
 
+if [ -f "$HYPERTABLE_HOME/bin/ht-extensions.sh" ]; then
+  . "$HYPERTABLE_HOME/bin/ht-extensions.sh"
+fi
 
 die() {
   echo "$@"
@@ -40,7 +43,16 @@ server_pidfile() {
     thriftbroker)       echo $RUNTIME_ROOT/run/ThriftBroker*.pid | grep -v "*";;
     testclient)         echo $RUNTIME_ROOT/run/Hypertable.TestClient*.pid | grep -v "*";;
     testdispatcher)     echo $RUNTIME_ROOT/run/Hypertable.TestDispatcher.pid;;
-    *) echo "unknown";  echo "ERROR: unknown service: $1" >&2; return 1
+    *)
+        t=`type -t server_pidfile_extension`
+        if [ $t == "function" ]; then
+            server_pidfile_extension $1
+        else
+            echo "unknown"
+            echo "ERROR: unknown service: $1" >&2
+            return 1
+        fi
+        ;;
   esac
 }
 

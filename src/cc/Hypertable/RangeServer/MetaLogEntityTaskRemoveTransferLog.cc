@@ -32,8 +32,11 @@ EntityTaskRemoveTransferLog::EntityTaskRemoveTransferLog(const String &log_dir)
   : EntityTask(EntityType::TASK_REMOVE_TRANSFER_LOG), transfer_log(log_dir) { }
 
 bool EntityTaskRemoveTransferLog::execute() {
-  if (Global::user_log)
+  bool can_remove = true;
+  if (Global::user_log) {
+    can_remove = false;
     Global::user_log->remove_linked_log(transfer_log);
+  }
   if (Global::system_log)
     Global::system_log->remove_linked_log(transfer_log);
   if (Global::metadata_log)
@@ -42,14 +45,21 @@ bool EntityTaskRemoveTransferLog::execute() {
     Global::root_log->remove_linked_log(transfer_log);
 
   try {
-    HT_INFOF("Removing transfer log '%s'", transfer_log.c_str());
-    if (Global::log_dfs->exists(transfer_log))
+    if (can_remove && Global::log_dfs->exists(transfer_log)) {
+      HT_INFOF("Removing transfer log '%s'", transfer_log.c_str());
       Global::log_dfs->rmdir(transfer_log);
+    }
+    else {
+      HT_INFOF("Removing transfer log '%s'", transfer_log.c_str());
+      // directory will be purged by Replication.Master
+      int32_t fd = Global::log_dfs->create(transfer_log + "/purged-directory",
+                        Filesystem::OPEN_FLAG_OVERWRITE, 0, -1, -1);
+      Global::log_dfs->close(fd);
+    }
   }
   catch (Exception &e) {
     HT_ERRORF("Problem removing log directory '%s' (%s - %s)",
 	      transfer_log.c_str(), Error::get_text(e.code()), e.what());
-    return false;
   }
   return true;
 }

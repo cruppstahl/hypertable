@@ -50,20 +50,26 @@ namespace Hypertable {
 
     CommitLogBlockStream(FilesystemPtr &fs);
     CommitLogBlockStream(FilesystemPtr &fs, const String &log_dir,
-                         const String &fragment);
+            const String &fragment, bool use_buffered_reader = true);
     virtual ~CommitLogBlockStream();
 
     void load(const String &log_dir, const String &fragment);
     void close();
-    bool next(CommitLogBlockInfo *, BlockCompressionHeaderCommitLog *);
+    bool next(CommitLogBlockInfo *, BlockCompressionHeaderCommitLog *,
+            bool refresh_length = false);
 
     String &get_fname() { return m_fname; }
 
     static bool ms_assert_on_error;
 
-  private:
+    uint64_t get_file_length() { return m_file_length; }
+    uint64_t get_offset() { return m_cur_offset; }
+    void refresh_length() { m_file_length = m_fs->length(m_fname); }
 
+  private:
     int load_next_valid_header(BlockCompressionHeaderCommitLog *header);
+
+    void reopen(uint64_t offset);
 
     FilesystemPtr m_fs;
     String        m_fragment;
@@ -73,6 +79,7 @@ namespace Hypertable {
     uint64_t      m_cur_offset;
     uint64_t      m_file_length;
     DynamicBuffer m_block_buffer;
+    bool          m_use_buffered_reader;
   };
 
   typedef intrusive_ptr<CommitLogBlockStream> CommitLogBlockStreamPtr;

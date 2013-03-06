@@ -291,15 +291,15 @@ void Schema::start_element_handler(void *userdata,
   int i;
 
   if (!strcasecmp(name, "Schema")) {
-    for (i=0; atts[i] != 0; i+=2) {
-      if (atts[i+1] == 0)
+    for (i = 0; atts[i] != 0; i += 2) {
+      if (atts[i + 1] == 0)
         return;
       if (!strcasecmp(atts[i], "generation"))
-        ms_schema->set_generation(atts[i+1]);
+        ms_schema->set_generation(atts[i + 1]);
       else if (!strcasecmp(atts[i], "compressor"))
-        ms_schema->set_compressor((String)atts[i+1]);
+        ms_schema->set_compressor((String)atts[i + 1]);
       else if (!strcasecmp(atts[i], "group_commit_interval"))
-        ms_schema->set_group_commit_interval(atoi(atts[i+1]));
+        ms_schema->set_group_commit_interval(atoi(atts[i + 1]));
       else
         ms_schema->set_error_string((String)"Unrecognized 'Schema' attribute : "
                                      + atts[i]);
@@ -307,18 +307,18 @@ void Schema::start_element_handler(void *userdata,
   }
   else if (!strcasecmp(name, "AccessGroup")) {
     ms_schema->open_access_group();
-    for (i=0; atts[i] != 0; i+=2) {
-      if (atts[i+1] == 0)
+    for (i = 0; atts[i] != 0; i += 2) {
+      if (atts[i + 1] == 0)
         return;
-      ms_schema->set_access_group_parameter(atts[i], atts[i+1]);
+      ms_schema->set_access_group_parameter(atts[i], atts[i + 1]);
     }
   }
   else if (!strcasecmp(name, "ColumnFamily")) {
     ms_schema->open_column_family();
-    for (i=0; atts[i] != 0; i+=2) {
-      if (atts[i+1] == 0)
+    for (i = 0; atts[i] != 0; i += 2) {
+      if (atts[i + 1] == 0)
         return;
-      ms_schema->set_column_family_parameter(atts[i], atts[i+1]);
+      ms_schema->set_column_family_parameter(atts[i], atts[i + 1]);
     }
   }
   else if (!strcasecmp(name, "MaxVersions") || !strcasecmp(name, "ttl")
@@ -646,7 +646,7 @@ void Schema::render(String &output, bool with_ids) {
     output = m_error_string;
     return;
   }
-  output += "<Schema";
+  output = "<Schema";
 
   if (m_output_ids || with_ids) {
     output += format(" generation=\"%d\"", m_generation);

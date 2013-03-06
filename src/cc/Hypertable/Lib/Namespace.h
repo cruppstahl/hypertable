@@ -168,8 +168,11 @@ namespace Hypertable {
      *
      * @param name name of the table
      * @param schema desired alterations represented as schema
+     * @param merge_schema if true, merge the new schema with the existing one;
+     *      otherwise the existing schema is overwritten
      */
-    void alter_table(const String &name, const String &schema);
+    void alter_table(const String &name, const String &schema,
+            bool merge_schema = true);
 
     /**
      * Opens a table

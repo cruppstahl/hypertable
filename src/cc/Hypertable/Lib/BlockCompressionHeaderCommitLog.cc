@@ -21,6 +21,7 @@
 
 #include "Common/Compat.h"
 #include "Common/Error.h"
+#include "Common/Logger.h"
 
 #include "Common/Serialization.h"
 
@@ -29,35 +30,35 @@
 using namespace Hypertable;
 using namespace Serialization;
 
-const size_t BlockCompressionHeaderCommitLog::LENGTH;
-
 BlockCompressionHeaderCommitLog::BlockCompressionHeaderCommitLog()
-  : BlockCompressionHeader(), m_revision(0) {
+  : BlockCompressionHeader(), m_revision(0), m_cluster_id(0) {
 }
 
 BlockCompressionHeaderCommitLog::BlockCompressionHeaderCommitLog(
-    const char *magic, int64_t revision)
-  : BlockCompressionHeader(magic), m_revision(revision) {
+    const char *magic, int64_t revision, uint64_t cluster_id)
+  : BlockCompressionHeader(magic), m_revision(revision),
+    m_cluster_id(cluster_id) {
 }
 
 void BlockCompressionHeaderCommitLog::encode(uint8_t **bufp) {
   uint8_t *base = *bufp;
   BlockCompressionHeader::encode(bufp);
   encode_i64(bufp, m_revision);
-  if ((size_t)(*bufp - base) + 2 == length())
-    write_header_checksum(base, bufp);
+  if (!is_legacy())
+    encode_i64(bufp, m_cluster_id);
+  write_header_checksum(base, bufp);
 }
-
 
 void BlockCompressionHeaderCommitLog::decode(const uint8_t **bufp,
-                                             size_t *remainp) {
-  const uint8_t *base = *bufp;
-
+        size_t *remainp) {
   BlockCompressionHeader::decode(bufp, remainp);
   m_revision = decode_i64(bufp, remainp);
-
-  if ((size_t)(*bufp - base) == length() - 2) {
-    *bufp += 2;
-    *remainp -= 2;
-  }
+  if (!is_legacy())
+    m_cluster_id = decode_i64(bufp, remainp);
+  else
+    m_cluster_id = 0;
+  // skip checksum
+  *bufp += 2;
+  *remainp -= 2;
 }
+

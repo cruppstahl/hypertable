@@ -52,6 +52,15 @@ import org.apache.hadoop.fs.FileStatus;
  */
 public class HadoopBroker {
 
+    /**
+     * A directory entry for posix_readdir
+     */
+    public class DirectoryEntry {
+        String name;
+        int flags;
+        int length;
+    }
+
     private static final int OPEN_FLAG_DIRECT          = 0x00000001;
     private static final int OPEN_FLAG_OVERWRITE       = 0x00000002;
     private static final int OPEN_FLAG_VERIFY_CHECKSUM = 0x00000004;
@@ -827,6 +836,56 @@ public class HadoopBroker {
             log.severe("Error sending READDIR response back (error="
                     + error + ", dirName=" + dirName + ")");
     }
+
+    /**
+     *
+     */
+    public void PosixReaddir(ResponseCallbackPosixReaddir cb, String dirName) {
+        int error = Error.OK;
+        String pathStr;
+
+        try {
+            if (mVerbose)
+                log.info("PosixReaddir('" + dirName + "')");
+
+            DirectoryEntry [] listing = null;
+            FileStatus[] statuses = null;
+            // if the directory doesn't exist then CDH4 throws
+            // FileNotFoundException, but CDH3 returns NULL
+            try {
+                statuses = mFilesystem.listStatus(new Path(dirName));
+            }
+            catch (FileNotFoundException e) {
+                // ignore
+            }
+
+            if (statuses != null) {
+                listing = new DirectoryEntry[statuses.length];
+                for (int k = 0; k < statuses.length; k++) {
+                    DirectoryEntry dirent = new DirectoryEntry();
+                    dirent.name = statuses[k].getPath().toString();
+                    dirent.length = (int)statuses[k].getLen();
+                    int lastSlash = dirent.name.lastIndexOf('/');
+                    if (lastSlash != -1)
+                        dirent.name = dirent.name.substring(lastSlash + 1);
+                    dirent.flags = statuses[k].isDir() ? 1 : 0;
+                    listing[k] = dirent;
+                }
+            }
+
+            error = cb.response(listing);
+        }
+        catch (IOException e) {
+            log.severe("I/O exception while reading (posix) directory '"
+                       + dirName + "' - " + e.toString());
+            error = cb.error(Error.DFSBROKER_IO_ERROR, e.toString());
+        }
+
+        if (error != Error.OK)
+            log.severe("Error sending POSIX_READDIR response back (error="
+                    + error + ", dirName=" + dirName + ")");
+    }
+
 
     /**
      *
