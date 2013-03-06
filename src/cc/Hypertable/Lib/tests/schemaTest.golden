@@ -54,3 +54,21 @@ ERROR schemaTest : Schema Parse Error: Invalid value (foo) for AccessGroup attri
     </ColumnFamily>
   </AccessGroup>
 </Schema>
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1" />
+    <Replicate cluster="cluster2" />
+    <Replicate cluster="cluster3" />
+    <Replicate cluster="cluster4" deleted="true" />
+  </ReplicationList>
+</Schema>
+
+
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1" />
+    <Replicate cluster="cluster2" />
+    <Replicate cluster="cluster3" />
+    <Replicate cluster="cluster4" deleted="true" />
+  </ReplicationList>
+</Schema>

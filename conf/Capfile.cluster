@@ -15,6 +15,9 @@ role :localhost, "mothercompiler"
 role :thriftbroker,  "thrift001", "thrift002", "thrift003", "thrift004", "thrift005"
 role :spare, "spare000", "spare001"
 
+role :repmaster, "mothercompiler"
+role :repslaves, "motherlode000", "motherlode001", "motherlode002"
+
 ######################### END OF USER CONFIGURATION ############################
 set :prompt_stop, 1
 set :prompt_clean, 1
@@ -229,6 +232,7 @@ task :start do
     start_master
     start_slaves
     start_master_thriftbroker
+    start_replication
   end
 end
 
@@ -306,6 +310,7 @@ task :stop do
   transaction do
     stop_master
     stop_slaves
+    stop_replication
     stop_hyperspace
     stop_dfsbrokers
   end
@@ -362,6 +367,7 @@ task :cleandb do
   end
 
   transaction do
+    stop_replication
     clean_master
     clean_hyperspace
     clean_slaves
@@ -400,6 +406,8 @@ task :status do
     master_status
     hyperspace_status
     rangeserver_status
+    repmaster_status
+    repslaves_status
   end
 end
 
@@ -443,5 +451,67 @@ desc "Run dump command on each rangeserver"
 task :rangeserver_dump, :roles => [:slave] do
   run <<-CMD
    echo "dump NOKEYS '#{dumpfile}';" | #{install_dir}/current/bin/ht ht_rsclient --batch #{config_option}
+  CMD
+end
+
+desc "Starts Replication.Master processes."
+task :start_replication do
+  transaction do
+    start_repmaster
+    start_repslaves
+  end
+end
+
+desc "Starts all Replication processes."
+task :start_repslaves, :roles => :repslaves do
+  run <<-CMD
+   #{install_dir}/current/bin/start-replication.sh --only-slave \
+      #{config_option}
+  CMD
+end
+
+desc "Starts Replication.Master processes."
+task :start_repmaster, :roles => :repmaster do
+  run <<-CMD
+   #{install_dir}/current/bin/start-replication.sh --only-master \
+      #{config_option}
+  CMD
+end
+
+desc "Stops all Replication processes."
+task :stop_replication do
+  transaction do
+    stop_repmaster
+    stop_repslaves
+  end
+end
+
+desc "Stops Replication.Slave processes."
+task :stop_repslaves, :roles => :repslaves do
+  run <<-CMD
+   #{install_dir}/current/bin/stop-replication.sh --only-slave \
+      #{config_option}
+  CMD
+end
+
+desc "Stops Replication.Master processes."
+task :stop_repmaster, :roles => :repmaster do
+  run <<-CMD
+   #{install_dir}/current/bin/stop-replication.sh --only-master \
+      #{config_option}
+  CMD
+end
+
+desc "Get status for Replication.Master processes."
+task :repmaster_status, :roles => [:repmaster] do
+  run <<-CMD
+   #{install_dir}/current/bin/ht serverup Replication.Master
+  CMD
+end
+
+desc "Get status for Replication.Slaves processes."
+task :repslaves_status, :roles => [:repslaves] do
+  run <<-CMD
+   #{install_dir}/current/bin/ht serverup Replication.Slave
   CMD
 end

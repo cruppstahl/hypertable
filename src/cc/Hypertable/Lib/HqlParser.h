@@ -333,6 +333,8 @@ namespace Hypertable {
       bool nokeys;
       String current_rename_column_old_name;
       String current_column_family;
+      Schema::ReplicationClusterMap replication_clusters;
+      String replication_helper;
 
       void validate_function(const String &s) {
         if (s == "guid")
@@ -868,6 +870,28 @@ namespace Hypertable {
         state.group_commit_interval = (::uint32_t)interval;
       }
       ParserState &state;
+    };
+
+    struct set_replication_helper {
+      set_replication_helper(ParserState &state)
+          : state(state) { }
+      void operator()(char const *str, char const *end) const {
+        state.replication_helper = String(str, end);
+        trim_if(state.replication_helper, is_any_of("'\""));
+        if (state.replication_helper.size() == 0)
+          HT_THROW(Error::HQL_PARSE_ERROR, "Invalid replication cluster");
+      }
+      ParserState &state;
+    };
+
+    struct set_replication_cluster {
+      set_replication_cluster(ParserState &state, bool enable)
+          : state(state), m_enable(enable) { }
+      void operator()(char const *str, char const *end) const {
+        state.replication_clusters[state.replication_helper] = !m_enable;
+      }
+      ParserState &state;
+      bool m_enable;
     };
 
     struct set_table_in_memory {
@@ -1930,6 +1954,7 @@ namespace Hypertable {
           Token VALUES       = as_lower_d["values"];
           Token COMPRESSOR   = as_lower_d["compressor"];
           Token GROUP_COMMIT_INTERVAL   = as_lower_d["group_commit_interval"];
+          Token REPLICATE    = as_lower_d["replicate"];
           Token DUMP         = as_lower_d["dump"];
           Token STATS        = as_lower_d["stats"];
           Token STARTS       = as_lower_d["starts"];
@@ -2224,7 +2249,14 @@ namespace Hypertable {
             = ALTER >> TABLE >> user_identifier[set_table_name(self.state)]
             >> +(ADD >> add_column_definitions
                 | DROP >> drop_column_definitions
-                | RENAME >> COLUMN >> FAMILY >> rename_column_definition)
+                | RENAME >> COLUMN >> FAMILY >> rename_column_definition
+                | REPLICATE >> TO 
+                    >> string_literal[set_replication_helper(self.state)]
+                    >> (
+                    OFF[set_replication_cluster(self.state, false)]
+                    | (*ON) [set_replication_cluster(self.state, true)]
+                    )
+                )
             ;
 
           exists_table_statement
@@ -2328,6 +2360,9 @@ namespace Hypertable {
             = COMPRESSOR >> *EQUAL >> string_literal[
                 set_table_compressor(self.state)]
             | GROUP_COMMIT_INTERVAL >> *EQUAL >> uint_p[set_group_commit_interval(self.state)]
+            | REPLICATE >> TO 
+                >> string_literal[set_replication_helper(self.state)]
+                    [set_replication_cluster(self.state, true)]
             | table_option_in_memory[set_table_in_memory(self.state)]
             | table_option_blocksize
             | table_option_replication

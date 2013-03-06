@@ -14,6 +14,7 @@ ALTER TABLE
       add_definition
       | drop_definition
       | rename_cf_definition
+      | replication_definition
 
     add_definition:
       column_family_name [MAX_VERSIONS int] [TTL duration]
@@ -24,6 +25,10 @@ ALTER TABLE
       column_family_name
     
     rename_cf_definition:    (old)column_family_name, (new)column_family_name
+
+    replication_definition:
+      REPLICATE TO 'cluster' [ON]
+      | REPLICATE TO 'cluster' OFF
 
     duration:
       num MONTHS

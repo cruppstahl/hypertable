@@ -103,6 +103,13 @@ TableSplit.cc
 TestSource.cc
 Types.cc
 bmz/bmz.c
+
+# commercial add-ons
+ClusterConfiguration.cc
+ReplicationMasterProtocol.cc
+ReplicationMasterClient.cc
+ReplicationSlaveProtocol.cc
+ReplicationSlaveClient.cc
 )
 
 add_library(Hypertable ${Hypertable_SRCS})
@@ -208,6 +215,9 @@ target_link_libraries(rangeserver_serialize_test Hypertable Hyperspace)
 add_executable(metalog_test tests/metalog_test.cc)
 target_link_libraries(metalog_test HyperDfsBroker Hypertable)
 
+# cluster_test
+add_executable(cluster_test tests/cluster_test.cc)
+target_link_libraries(cluster_test Hypertable)
 
 #
 # Copy test files
@@ -253,6 +263,7 @@ configure_file (${SRC_DIR}/MutatorNoLogSyncTest.cfg ${DST_DIR}/MutatorNoLogSyncT
 configure_file(${SRC_DIR}/name_id_mapper_test.cfg ${DST_DIR}/name_id_mapper_test.cfg)
 configure_file(${SRC_DIR}/metalog_test.golden ${DST_DIR}/metalog_test.golden)
 configure_file(${SRC_DIR}/metalog_test2.golden ${DST_DIR}/metalog_test2.golden)
+configure_file(${SRC_DIR}/cluster_test.cfg ${DST_DIR}/cluster_test.cfg)
 
 add_test(Hypertable-Lib-TestSetup env INSTALL_DIR=${INSTALL_DIR}
          ${SRC_DIR}/test_setup.sh)
@@ -277,6 +288,7 @@ add_test(NameIdMapper name_id_mapper_test --config=${DST_DIR}/name_id_mapper_tes
 add_test(StatsRangeServer-serialize rangeserver_serialize_test)
 add_test(ScanSpec-basic-tests scan_spec_test)
 add_test(Secondary-Indices-tests indices_test)
+add_test(Cluster-tests cluster_test)
 
 if (NOT HT_COMPONENT_INSTALL)
   file(GLOB HEADERS *.h)

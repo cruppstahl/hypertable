@@ -45,6 +45,7 @@
 #include "Hypertable/Lib/MetaLogEntityRange.h"
 #include "Hypertable/RangeServer/MetaLogDefinitionRangeServer.h"
 #include "Hypertable/Master/MetaLogDefinitionMaster.h"
+#include "Hypertable/Lib/SchemaUpdateDefinition.h"
 
 using namespace Hypertable;
 using namespace Config;
@@ -177,6 +178,8 @@ int main(int argc, char **argv) {
     MetaLog::DefinitionPtr def = new MetaLog::DefinitionRangeServer("");
     defmap[def->name()] = def;
     def = new MetaLog::DefinitionMaster("");
+    defmap[def->name()] = def;
+    def = new SchemaUpdateDefinition("");
     defmap[def->name()] = def;
 
     FilesystemPtr fs = dfs_client;

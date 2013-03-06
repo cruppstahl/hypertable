@@ -144,6 +144,7 @@ Schema::Schema(const Schema &src_schema)
   m_need_id_assignment = src_schema.m_need_id_assignment;
   m_output_ids = src_schema.m_output_ids;
   m_counter_flags = src_schema.m_counter_flags;
+  m_cluster_map = src_schema.m_cluster_map;
 
   // Create access groups
   foreach_ht(const AccessGroup *src_ag, src_schema.m_access_groups) {
@@ -305,6 +306,29 @@ void Schema::start_element_handler(void *userdata,
                                      + atts[i]);
     }
   }
+  else if (!strcasecmp(name, "Replicate")) {
+    String cluster;
+    for (i = 0; atts[i] != 0; i += 2) {
+      if (atts[i + 1] == 0) {
+        if (!cluster.empty()) {
+          ms_schema->add_replication_cluster(cluster, false);
+          cluster = "";
+        }
+        return;
+      }
+      if (!strcasecmp(atts[i], "cluster"))
+        cluster = atts[i + 1];
+      else if (!strcasecmp(atts[i], "deleted")) {
+        ms_schema->add_replication_cluster(cluster, true);
+        cluster = "";
+      }
+      else
+        ms_schema->set_error_string((String)"Unrecognized 'Schema' attribute : "
+                                     + atts[i]);
+    }
+    if (!cluster.empty())
+      ms_schema->add_replication_cluster(cluster, false);
+  }
   else if (!strcasecmp(name, "AccessGroup")) {
     ms_schema->open_access_group();
     for (i = 0; atts[i] != 0; i += 2) {
@@ -326,7 +350,8 @@ void Schema::start_element_handler(void *userdata,
            || !strcasecmp(name, "deleted") || !strcasecmp(name, "renamed")
            || !strcasecmp(name, "NewName") || !strcasecmp(name, "Counter")
            || !strcasecmp(name, "TimeOrder") || !strcasecmp(name, "Index")
-           || !strcasecmp(name, "QualifierIndex"))
+           || !strcasecmp(name, "QualifierIndex")
+           || !strcasecmp(name, "ReplicationList"))
     ms_collected_text = "";
   else
     ms_schema->set_error_string(format("Unrecognized element - '%s'", name));
@@ -658,6 +683,20 @@ void Schema::render(String &output, bool with_ids) {
   if (m_group_commit_interval > 0)
     output += format(" group_commit_interval=\"%u\"", m_group_commit_interval);
 
+  if (m_cluster_map.size() > 0) {
+    output += ">\n  <ReplicationList>\n";
+    for (ReplicationClusterMap::iterator it = m_cluster_map.begin();
+        it != m_cluster_map.end(); ++it) {
+      if (it->second)
+        output += format("    <Replicate cluster=\"%s\" deleted=\"true\" />\n",
+                it->first.c_str());
+      else
+        output += format("    <Replicate cluster=\"%s\" />\n",
+                it->first.c_str());
+    }
+    output += "  </ReplicationList";
+  }
+
   output += ">\n";
 
   foreach_ht(const AccessGroup *ag, m_access_groups) {
@@ -842,6 +881,19 @@ void Schema::render_hql_create_table(const String &table_name, String &output) {
 
   if (m_group_commit_interval > 0)
     output += format(" GROUP_COMMIT_INTERVAL %u", m_group_commit_interval);
+
+  if (m_cluster_map.size() > 0) {
+    bool first = true;
+    for (ReplicationClusterMap::iterator it = m_cluster_map.begin();
+        it != m_cluster_map.end(); ++it) {
+      if (it->second)
+        continue;
+      if (!first)
+        output += ",";
+      first = false;
+      output += format(" REPLICATE TO \"%s\"", it->first.c_str());
+    }
+  }
 
   output += "\n";
 }

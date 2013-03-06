@@ -69,6 +69,7 @@ CREATE TABLE
       | REPLICATION int
       | COMPRESSOR compressor_spec
       | GROUP_COMMIT_INTERVAL int
+      | REPLICATE TO 'cluster-id'
 
 #### Description
 <p>
@@ -190,6 +191,7 @@ The following table options are supported:
   * `REPLICATION int`
   * `COMPRESSOR compressor_spec`
   * `GROUP_COMMIT_INTERVAL int`
+  * `REPLICATE TO 'cluster-id'`
 
 Most of these are the same options as the ones in the column family and access
 group specification except that they act as defaults in the case where no
@@ -207,6 +209,11 @@ in milliseconds.  The interval is constrained by the value of the config propert
 `Hypertable.RangeServer.CommitInterval`, which acts as a lower bound and defaults
 to 50ms.  The value specified for `GROUP_COMMIT_INTERVAL` will get rounded up to
 the nearest multiple of this property value.
+
+Hypertable supports asynchronous replication as part of a commercial
+add-on.  If you installed this add-on, you can enable replication with the
+`REPLICATE TO` table option (or with the `REPLICATE TO` option of
+`ALTER TABLE`).  See the accompanying documentation for more information.
 
 ### Column Family Options
 <p>

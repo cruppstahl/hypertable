@@ -24,4 +24,5 @@
  * this file is included in the middle of an enum - make sure only valid
  * enum lines are listed here, and terminate the last line with a comma!
  */
+REPLICATION_CLUSTER_NOT_FOUND       = COM_EXTENSIONS_START_HERE + 1,
 

@@ -186,6 +186,8 @@ cmd_create_table(NamespacePtr &ns, ParserState &state,
     schema->validate_compressor(state.table_compressor);
     schema->set_compressor(state.table_compressor);
     schema->set_group_commit_interval(state.group_commit_interval);
+    if (state.replication_clusters.size() > 0)
+      schema->set_replication_cluster(state.replication_clusters);
 
     foreach_ht(Schema::AccessGroup *ag, state.ag_list) {
       schema->validate_compressor(ag->compressor);
@@ -269,6 +271,8 @@ cmd_alter_table(NamespacePtr &ns, ParserState &state,
     }
     schema->add_column_family(cf);
   }
+
+  schema->set_replication_cluster(state.replication_clusters);
 
   const char *error_str = schema->get_error_string();
   if (error_str)

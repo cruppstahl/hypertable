@@ -84,6 +84,8 @@ namespace Hypertable {
 
     typedef std::vector<AccessGroup *> AccessGroups;
 
+    typedef std::map<String, bool> ReplicationClusterMap;
+
     Schema();
     Schema(const Schema &src_schema);
     ~Schema();
@@ -127,6 +129,7 @@ namespace Hypertable {
     void set_generation(const char *generation);
     void set_max_column_family_id(const char *generation);
     uint32_t get_generation() const { return m_generation; }
+    void set_generation(uint32_t gen) { m_generation = gen; }
 
     size_t get_max_column_family_id() { return m_max_column_family_id; }
     void incr_max_column_family_id() {++m_max_column_family_id; }
@@ -180,6 +183,30 @@ namespace Hypertable {
     }
     uint32_t get_group_commit_interval() { return m_group_commit_interval; }
 
+    void add_replication_cluster(const String &cluster, bool deleted = false) {
+      m_cluster_map[cluster] = deleted;
+    }
+
+    bool has_replication_cluster(const String &cluster) {
+      return m_cluster_map.find(cluster) != m_cluster_map.end();
+    }
+
+    void set_replication_cluster(const ReplicationClusterMap &clusters) {
+      m_cluster_map = clusters;
+    }
+
+    const ReplicationClusterMap &get_replication_cluster() {
+      return m_cluster_map;
+    }
+
+    void clear_replication_clusters() {
+      m_cluster_map.clear();
+    }
+
+    void remove_replication_cluster(const String &cluster) {
+      m_cluster_map.erase(m_cluster_map.find(cluster));
+    }
+
     typedef hash_map<String, ColumnFamily *> ColumnFamilyMap;
     typedef hash_map<String, AccessGroup *> AccessGroupMap;
 
@@ -204,6 +231,7 @@ namespace Hypertable {
     String         m_compressor;
     std::vector<int>  m_counter_flags;
     uint32_t       m_group_commit_interval;
+    ReplicationClusterMap m_cluster_map;
 
     static void
     start_element_handler(void *userdata, const XML_Char *name,

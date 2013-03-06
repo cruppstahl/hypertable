@@ -136,8 +136,10 @@ void Namespace::alter_table(const String &table_name,
 
   if (merge_schema)
     final_schema = new Schema(*(schema.get()));
-  else
+  else {
     final_schema = new Schema();
+    final_schema->set_generation(schema->get_generation());
+  }
   final_schema->incr_generation();
 
   foreach_ht(Schema::AccessGroup *alter_ag, alter_schema->get_access_groups()) {
@@ -187,6 +189,22 @@ void Namespace::alter_table(const String &table_name,
         delete final_cf;
         HT_THROW(Error::BAD_SCHEMA, error_msg);
       }
+    }
+  }
+
+  Schema::ReplicationClusterMap::const_iterator it;
+  for (it = alter_schema->get_replication_cluster().begin();
+      it != alter_schema->get_replication_cluster().end(); ++it) {
+    // if a cluster is deleted: make sure that it existed
+    if (it->second) {
+      if (!schema->has_replication_cluster(it->first))
+        HT_THROW(Error::BAD_SCHEMA, "Invalid or unknown replication cluster");
+      final_schema->remove_replication_cluster(it->first);
+    }
+    else {
+      if (m_name == "sys")
+        HT_THROW(Error::BAD_SCHEMA, "Unable to replicate /sys namespace");
+      final_schema->add_replication_cluster(it->first, it->second);
     }
   }
 

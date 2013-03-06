@@ -27,6 +27,10 @@
 
 #include "Hypertable/Lib/Types.h"
 #include "Hypertable/Lib/Schema.h"
+#include "Hypertable/Lib/ReplicationMasterClient.h"
+#include "Hypertable/Lib/ClusterConfiguration.h"
+
+#include "Context.h"
 
 namespace Hypertable {
 
@@ -53,7 +57,11 @@ class Extensions {
             TableIdentifierManaged &table_id);
 
   private:
+    static ReplicationMasterClientPtr get_replication_client(ContextPtr &context);
+
     static PropertiesPtr ms_props;
+    static ReplicationMasterClientPtr ms_replication_client;
+    static ClusterConfigurationPtr ms_cluster_config;
 };
 
 } // namespace Hypertable

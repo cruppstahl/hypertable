@@ -63,11 +63,10 @@ namespace {
 
 
 int main(int argc, char **argv) {
-  off_t len;
-  const char *buf;
   bool golden = false;
   TestHarness harness("schemaTest");
   Schema *schema;
+  std::string schemastr;
 
   if (argc > 1) {
     if (!strcmp(argv[1], "--golden"))
@@ -75,6 +74,9 @@ int main(int argc, char **argv) {
     else
       Usage::dump_and_exit(usage);
   }
+
+  off_t len;
+  const char *buf;
 
   for (int i=0; bad_schemas[i] != 0; ++i) {
     if ((buf = FileUtils::file_to_buffer(bad_schemas[i], &len)) == 0)
@@ -108,7 +110,6 @@ int main(int argc, char **argv) {
   schema->close_column_family();
   schema->close_access_group();
 
-  std::string schemastr;
   schema->render(schemastr);
   FileUtils::write(harness.get_log_file_descriptor(), schemastr.c_str(),
                    schemastr.length());
@@ -120,6 +121,35 @@ int main(int argc, char **argv) {
                    schemastr.length());
 
   delete schema;
+
+  schema = new Schema();
+  schema->add_replication_cluster("cluster1", false);
+  schema->add_replication_cluster("cluster2", false);
+  schema->add_replication_cluster("cluster3", false);
+  assert(schema->has_replication_cluster("cluster1"));
+  assert(schema->has_replication_cluster("cluster2"));
+  assert(schema->has_replication_cluster("cluster3"));
+  assert(!schema->has_replication_cluster("cluster4"));
+  schema->add_replication_cluster("cluster4", true);
+  assert(schema->has_replication_cluster("cluster4"));
+  schema->assign_ids();
+  schemastr = "";
+  schema->render(schemastr);
+  FileUtils::write(harness.get_log_file_descriptor(), schemastr.c_str(),
+                   schemastr.length());
+
+  FileUtils::write(harness.get_log_file_descriptor(), "\n\n", 2);
+
+  delete schema;
+  schema = Schema::new_instance(schemastr.c_str(), schemastr.size());
+  assert(schema->has_replication_cluster("cluster1"));
+  assert(schema->has_replication_cluster("cluster2"));
+  assert(schema->has_replication_cluster("cluster3"));
+  assert(schema->has_replication_cluster("cluster4"));
+  assert(!schema->has_replication_cluster("cluster5"));
+  schema->render(schemastr);
+  FileUtils::write(harness.get_log_file_descriptor(), schemastr.c_str(),
+                   schemastr.length());
 
   if (!golden)
     harness.validate_and_exit("schemaTest.golden");

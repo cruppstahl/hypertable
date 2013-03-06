@@ -1,0 +1,245 @@
+
+Welcome to the hypertable command interpreter.
+For information about Hypertable, visit http://hypertable.com
+
+Type 'help' for a list of commands, or 'help shell' for a
+list of shell meta commands.
+
+CREATE TABLE Repl (c) REPLICATE TO "";
+Error: Invalid replication cluster - HYPERTABLE HQL parse error
+CREATE TABLE Repl (c) REPLICATE TO "xxx";
+Error: MasterClient operation create_table('Repl') failed - MASTER bad schema
+
+CREATE TABLE Repl (c) REPLICATE TO "cluster1-east";
+Error: MasterClient operation create_table('Repl') failed - REPLICATION cluster not found
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-east"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-east" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "";
+Error: Invalid replication cluster - HYPERTABLE HQL parse error
+ALTER TABLE Repl REPLICATE TO "" OFF;
+Error: Invalid replication cluster - HYPERTABLE HQL parse error
+ALTER TABLE Repl REPLICATE TO "" ON;
+Error: Invalid replication cluster - HYPERTABLE HQL parse error
+ALTER TABLE Repl REPLICATE TO "yyy";
+Error: MasterClient operation alter_table('Repl') failed - MASTER bad schema
+ALTER TABLE Repl REPLICATE TO "yyy" OFF;
+Error: Invalid or unknown replication cluster - HYPERTABLE bad schema
+
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-east"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-east" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster1-east" OFF;
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+)
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster1-west" ON;
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-west"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-west" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster1-east" ON;
+ALTER TABLE Repl REPLICATE TO "cluster1-west" ON;
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-east", REPLICATE TO "cluster1-west"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-east" />
+    <Replicate cluster="cluster1-west" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster1-west" OFF;
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-east"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-east" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+DROP TABLE Repl;
+
+# not allowed to replicate tables from /sys
+USE "/sys";
+ALTER TABLE METADATA REPLICATE TO "cluster1-west" ON;
+Error: Unable to replicate /sys namespace - HYPERTABLE bad schema
+
+USE "/";
+
+CREATE TABLE Repl (c) REPLICATE TO "cluster1-east" REPLICATE TO "cluster1-west" REPLICATE TO "cluster2-west";
+Error: MasterClient operation create_table('Repl') failed - REPLICATION cluster not found
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-east", REPLICATE TO "cluster1-west", REPLICATE TO "cluster2-west"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-east" />
+    <Replicate cluster="cluster1-west" />
+    <Replicate cluster="cluster2-west" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster3-west" REPLICATE TO "cluster1-east" OFF;
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-west", REPLICATE TO "cluster2-west", REPLICATE TO "cluster3-west"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-west" />
+    <Replicate cluster="cluster2-west" />
+    <Replicate cluster="cluster3-west" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
+
+ALTER TABLE Repl REPLICATE TO "cluster2-east" OFF;
+Error: Invalid or unknown replication cluster - HYPERTABLE bad schema
+SHOW CREATE TABLE Repl;
+
+CREATE TABLE Repl (
+  c,
+  ACCESS GROUP default (c)
+) REPLICATE TO "cluster1-west", REPLICATE TO "cluster2-west", REPLICATE TO "cluster3-west"
+
+DESCRIBE TABLE Repl;
+<Schema>
+  <ReplicationList>
+    <Replicate cluster="cluster1-west" />
+    <Replicate cluster="cluster2-west" />
+    <Replicate cluster="cluster3-west" />
+  </ReplicationList>
+  <AccessGroup name="default">
+    <ColumnFamily>
+      <Name>c</Name>
+      <Counter>false</Counter>
+      <deleted>false</deleted>
+    </ColumnFamily>
+  </AccessGroup>
+</Schema>
+
