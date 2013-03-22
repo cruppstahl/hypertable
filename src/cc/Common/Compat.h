@@ -19,10 +19,18 @@
  * 02110-1301, USA.
  */
 
+/** @file
+ * Compatibility Macros for C/C++.
+ * This file contains compatibility macros for C/C++. Always include this
+ * file before including any other file!
+ */
+
 #ifndef HYPERTABLE_COMPAT_H
 #define HYPERTABLE_COMPAT_H
 
-// Include this before other includes .cc files
+/** @addtogroup Common
+ *  @{
+ */
 
 // The same stuff for C code
 #include "compat-c.h"
@@ -41,5 +49,7 @@
 #include "Sweetener.h"
 
 #define HT_UNUSED(x) static_cast<void>(x)
+
+/** @}*/
 
 #endif // HYPERTABLE_COMPAT_H

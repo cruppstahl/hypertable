@@ -42,7 +42,6 @@ namespace Hypertable { namespace Config {
       if (desc)
         cmdline_desc(*desc);
 
-      file_loaded = false;
       PolicyT::init_options();
       parse_args(argc, argv);
       PolicyT::init();

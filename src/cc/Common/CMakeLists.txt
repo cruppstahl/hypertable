@@ -25,7 +25,6 @@ Abi.cc
 Checksum.cc
 Config.cc
 Crontab.cc
-Debug.cc
 DiscreteRandomGenerator.cc
 DiscreteRandomGeneratorFactory.cc
 DiscreteRandomGeneratorZipf.cc
