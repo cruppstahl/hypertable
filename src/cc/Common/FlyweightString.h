@@ -19,6 +19,11 @@
  * 02110-1301, USA.
  */
 
+/** @file
+ * Flyweight string set.
+ * This string set stores duplicate strings efficiently. 
+ */
+
 #ifndef HYPERTABLE_FLYWEIGHTSTRING_H
 #define HYPERTABLE_FLYWEIGHTSTRING_H
 
@@ -28,13 +33,28 @@
 
 namespace Hypertable {
 
+  /** @addtogroup Common
+   *  @{
+   */
+
   class FlyweightString {
   public:
+    /** The destructor deletes all internal pointers and clears the set;
+     * pointers retrieved with @sa get() are invalidated.
+     */
     ~FlyweightString() {
       for (CstrSet::iterator iter = m_strings.begin(); iter != m_strings.end();
            ++iter)
         delete [] *iter;
     }
+
+    /** Returns a copy of the string; this string is valid till the
+     * FlyweightString set is destructed. Duplicate strings are not inserted
+     * twice.
+     *
+     * @param str The string to insert
+     * @return A copy of the inserted string
+     */
     const char *get(const char *str) {
       if (str == 0)
         return 0;
@@ -46,6 +66,15 @@ namespace Hypertable {
       m_strings.insert(constant_str);
       return constant_str;
     }
+
+    /** Returns a copy of the string; this string is valid till the
+     * FlyweightString set is destructed. Duplicate strings are not inserted
+     * twice.
+     *
+     * @param str The string to insert
+     * @param len The length of the string
+     * @return A copy of the inserted string
+     */
     const char *get(const char *str, size_t len) {
       if (str == 0)
         return 0;
@@ -62,8 +91,11 @@ namespace Hypertable {
     }
 
   private:
+    /** The std::set holding the strings */
     CstrSet m_strings;
   };
+
+  /** @} */
 
 }
 

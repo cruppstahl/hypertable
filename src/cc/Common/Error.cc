@@ -19,6 +19,12 @@
  * 02110-1301, USA.
  */
 
+/** @file
+ * Error codes, Exception handling, error logging
+ * This file contains all error codes used in Hypertable, the Exception
+ * base class and macros for logging and error handling.
+ */
+
 #include "Common/Compat.h"
 #include "Common/HashMap.h"
 #include "Common/Logger.h"

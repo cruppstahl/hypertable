@@ -252,7 +252,10 @@ namespace Hypertable {
      */
     const char *get_text(int error);
 
-    /** Generates and print the error documentation as html */
+    /** Generates and print the error documentation as html
+     *
+     * @param out The ostream which is used for printing
+     */
     void generate_html_error_code_documentation(std::ostream &out);
 
   } // namespace Error
@@ -260,7 +263,7 @@ namespace Hypertable {
 
   class Exception;
 
-  // Helpers to render a exception message a la IO manipulators
+  /** Helper class to render an exception message a la IO manipulators */
   struct ExceptionMessageRenderer {
     ExceptionMessageRenderer(const Exception &e) : ex(e) { }
 
@@ -269,6 +272,11 @@ namespace Hypertable {
     const Exception &ex;
   };
 
+  /** Helper class to render an exception message a la IO manipulators
+   *
+   * When printing an Exception, this class also appends a separator. This
+   * is used for printing chained Exceptions
+   */
   struct ExceptionMessagesRenderer {
     ExceptionMessagesRenderer(const Exception &e, const char *sep = ": ")
       : ex(e), separator(sep) { }
@@ -282,103 +290,193 @@ namespace Hypertable {
   /**
    * This is a generic exception class for Hypertable.  It takes an error code
    * as a constructor argument and translates it into an error message.
+   * Exceptions can be "chained".
    */
   class Exception : public std::runtime_error {
-    const Exception &operator=(const Exception &); // not assignable
+    /** Do not allow assignments */
+    const Exception &operator=(const Exception &);
 
+    /** The error code */
     int m_error;
+
+    /** The source code line where the exception was thrown */
     int m_line;
+
+    /** The function name where the exception was thrown */
     const char *m_func;
+
+    /** The source code file where the exception was thrown */
     const char *m_file;
 
   public:
     typedef std::runtime_error Parent;
 
+    /** Constructor
+     *
+     * @param error The error code
+     * @param l The source code line
+     * @param fn The function name
+     * @param fl The file name
+     */
     Exception(int error, int l = 0, const char *fn = 0, const char *fl = 0)
-      : Parent(""), m_error(error), m_line(l), m_func(fn), m_file(fl), prev(0)
-      { }
+      : Parent(""), m_error(error), m_line(l), m_func(fn), m_file(fl), prev(0) {
+    }
+
+    /** Constructor
+     *
+     * @param error The error code
+     * @param msg An additional error message
+     * @param l The source code line
+     * @param fn The function name
+     * @param fl The file name
+     */
     Exception(int error, const String &msg, int l = 0, const char *fn = 0,
-              const char *fl = 0)
-      : Parent(msg), m_error(error), m_line(l), m_func(fn), m_file(fl), prev(0)
-      { }
-    Exception(int error, const String &msg, const Exception &ex,
-              int l = 0, const char *fn = 0, const char *fl = 0)
+            const char *fl = 0)
       : Parent(msg), m_error(error), m_line(l), m_func(fn), m_file(fl),
-        prev(new Exception(ex)) { }
-    // copy ctor is required for exceptions
-    Exception(const Exception &ex) : Parent(ex), m_error(ex.m_error),
-        m_line(ex.m_line), m_func(ex.m_func), m_file(ex.m_file) {
+      prev(0) {
+    }
+
+    /** Constructor
+     *
+     * @param error The error code
+     * @param msg An additional error message
+     * @param ex The previous exception in the exception chain
+     * @param l The source code line
+     * @param fn The function name
+     * @param fl The file name
+     */
+    Exception(int error, const String &msg, const Exception &ex, int l = 0,
+            const char *fn = 0, const char *fl = 0)
+      : Parent(msg), m_error(error), m_line(l), m_func(fn), m_file(fl),
+        prev(new Exception(ex)) {
+    }
+
+    /** Copy constructor
+     *
+     * @param ex The exception that is copied
+     */
+    Exception(const Exception &ex)
+      : Parent(ex), m_error(ex.m_error), m_line(ex.m_line), m_func(ex.m_func),
+      m_file(ex.m_file) {
       prev = ex.prev ? new Exception(*ex.prev) : 0;
     }
+
+    /** Destructor */
     ~Exception() throw() { delete prev; prev = 0; }
 
+    /** Returns the error code
+     *
+     * @return The error code of this exception.
+     * @sa Error::get_text to retrieve a descriptive error string
+     */
     int code() const { return m_error; }
+
+    /** Returns the source code line number where the exception was thrown
+     *
+     * @return The line number
+     */
     int line() const { return m_line; }
+
+    /** Returns the name of the function which threw the Exception
+     *
+     * @return The function name
+     */
     const char *func() const { return m_func; }
+
+    /** Returns the source code line number where the exception was thrown
+     *
+     * @return The file name
+     */
     const char *file() const { return m_file; }
 
-    // render message
+    /** Renders an Exception to an ostream
+     *
+     * @param out Reference to the ostream
+     */
     virtual std::ostream &render_message(std::ostream &out) const {
       return out << what(); // override for custom exceptions
     }
 
     // render messages for the entire exception chain
-    virtual std::ostream &
-    render_messages(std::ostream &out, const char *sep) const;
+    /** Renders multiple Exceptions to an ostream
+     *
+     * @param out Reference to the ostream
+     * @param sep The separator between the Exceptions, i.e. ':'
+     */
+    virtual std::ostream &render_messages(std::ostream &out,
+            const char *sep) const;
 
+    /** Retrieves a Renderer for this Exception */
     ExceptionMessageRenderer message() const {
       return ExceptionMessageRenderer(*this);
     }
 
+    /** Retrieves a Renderer for chained Exceptions */
     ExceptionMessagesRenderer messages(const char *sep = ": ") const {
       return ExceptionMessagesRenderer(*this, sep);
     }
 
-    Exception *prev;    // exception chain/list
+    /** The previous exception in the exception chain */
+    Exception *prev;
   };
 
-std::ostream &operator<<(std::ostream &out, const Exception &);
+  /** Global operator to print an Exception to a std::ostream */
+  std::ostream &operator<<(std::ostream &out, const Exception &);
 
-inline std::ostream &
-ExceptionMessageRenderer::render(std::ostream &out) const {
-  return ex.render_message(out);
-}
+  /** Global helper function to print an Exception to a std::ostream */
+  inline std::ostream &
+  ExceptionMessageRenderer::render(std::ostream &out) const {
+    return ex.render_message(out);
+  }
 
-inline std::ostream &
-ExceptionMessagesRenderer::render(std::ostream &out) const {
-  return ex.render_messages(out, separator);
-}
+  /** Global helper function to print an Exception to a std::ostream */
+  inline std::ostream &
+  ExceptionMessagesRenderer::render(std::ostream &out) const {
+    return ex.render_messages(out, separator);
+  }
 
-inline std::ostream &
-operator<<(std::ostream &out, const ExceptionMessageRenderer &r) {
-  return r.render(out);
-}
+  /** Global helper operator to print an Exception to a std::ostream */
+  inline std::ostream &
+  operator<<(std::ostream &out, const ExceptionMessageRenderer &r) {
+    return r.render(out);
+  }
 
-inline std::ostream &
-operator<<(std::ostream &out, const ExceptionMessagesRenderer &r) {
-  return r.render(out);
-}
+  /** Global helper operator to print an Exception to a std::ostream */
+  inline std::ostream &
+  operator<<(std::ostream &out, const ExceptionMessagesRenderer &r) {
+    return r.render(out);
+  }
 
-/**
- * Convenience macros to create an exception stack trace
- */
+/** Convenience macro to create an exception stack trace */
 #define HT_EXCEPTION(_code_, _msg_) \
   Exception(_code_, _msg_, __LINE__, HT_FUNC, __FILE__)
 
+/** Convenience macro to create an chained exception */
 #define HT_EXCEPTION2(_code_, _ex_, _msg_) \
   Exception(_code_, _msg_, _ex_, __LINE__, HT_FUNC, __FILE__)
 
+/** Convenience macro to throw an exception */
 #define HT_THROW(_code_, _msg_) throw HT_EXCEPTION(_code_, _msg_)
+
+/** Convenience macro to throw an exception */
 #define HT_THROW_(_code_) HT_THROW(_code_, "")
+
+/** Convenience macro to throw a chained exception */
 #define HT_THROW2(_code_, _ex_, _msg_) throw HT_EXCEPTION2(_code_, _ex_, _msg_)
+
+/** Convenience macro to throw a chained exception */
 #define HT_THROW2_(_code_, _ex_) HT_THROW2(_code_, _ex_, "")
 
+/** Convenience macro to throw an exception with a printf-like message */
 #define HT_THROWF(_code_, _fmt_, ...) \
   throw HT_EXCEPTION(_code_, Hypertable::format(_fmt_, __VA_ARGS__))
 
+/** Convenience macro to throw a chained exception with a printf-like message */
 #define HT_THROW2F(_code_, _ex_, _fmt_, ...) \
   throw HT_EXCEPTION2(_code_, _ex_, Hypertable::format(_fmt_, __VA_ARGS__))
 
+/** Convenience macro to catch and rethrow exceptions with a printf-like
+ * message */
 #define HT_RETHROWF(_fmt_, ...) \
   catch (Exception &e) { HT_THROW2F(e.code(), e, _fmt_, __VA_ARGS__); } \
   catch (std::bad_alloc &e) { \
@@ -393,25 +491,26 @@ operator<<(std::ostream &out, const ExceptionMessagesRenderer &r) {
     throw; \
   }
 
+/** Convenience macro to catch and rethrow exceptions */
 #define HT_RETHROW(_s_) HT_RETHROWF("%s", _s_)
-#define HT_RETHROW_ HT_RETHROW("")
 
+/** Convenience macro to execute a code block and rethrow all exceptions */
 #define HT_TRY(_s_, _code_) do { \
   try { _code_; } \
   HT_RETHROW(_s_) \
 } while (0)
 
-
-// For catching exceptions in destructors
+/** Convenience macros for catching and logging exceptions in destructors */
 #define HT_LOG_EXCEPTION(_s_) \
   catch (Exception &e) { HT_ERROR_OUT << e <<", "<< _s_ << HT_END; } \
   catch (std::bad_alloc &e) { \
-    HT_ERROR_OUT <<"Out of memory, "<< _s_ << HT_END; } \
+    HT_ERROR_OUT << "Out of memory, " << _s_ << HT_END; } \
   catch (std::exception &e) { \
-    HT_ERROR_OUT <<"Caught exception: "<< e.what() <<", "<< _s_ << HT_END; } \
+    HT_ERROR_OUT << "Caught exception: " << e.what() <<", "<< _s_ << HT_END; } \
   catch (...) { \
-    HT_ERROR_OUT <<"Caught unknown exception, "<< _s_ << HT_END; }
+    HT_ERROR_OUT << "Caught unknown exception, " << _s_ << HT_END; }
 
+/** Convenience macro to execute code and log all exceptions */
 #define HT_TRY_OR_LOG(_s_, _code_) do { \
   try { _code_; } \
   HT_LOG_EXCEPTION(_s_) \

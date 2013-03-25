@@ -32,9 +32,7 @@
 using namespace Hypertable;
 using namespace std;
 
-/**
- *
- */
+
 void InteractiveCommand::parse_command_line(const char *line) {
   size_t cmd_len = strlen(this->command_text());
   const char *base, *ptr;
@@ -47,7 +45,6 @@ void InteractiveCommand::parse_command_line(const char *line) {
   ptr = line + cmd_len;
 
   while (true) {
-
     key = "";
     value = "";
 
@@ -73,7 +70,7 @@ void InteractiveCommand::parse_command_line(const char *line) {
             break;
           }
           else {
-            for (ptr=base; *ptr && !isspace(*ptr); ptr++)
+            for (ptr = base; *ptr && !isspace(*ptr); ptr++)
               ;
             value = string(base, ptr-base);
             break;
@@ -88,20 +85,18 @@ void InteractiveCommand::parse_command_line(const char *line) {
     }
     m_args.push_back(pair<string, string>(key, value));
   }
-
 }
-
 
 
 bool
 InteractiveCommand::parse_string_literal(const char *str, std::string &text,
-                                         const char **endptr) {
+        const char **endptr) {
   int lastchar = *str;
   const char *ptr, *base;
 
   assert(*str == '"');
 
-  base = str+1;
+  base = str + 1;
 
   for (ptr = base; *ptr; ++ptr) {
     if (*ptr == '\"' && lastchar != '\\')
@@ -116,6 +111,6 @@ InteractiveCommand::parse_string_literal(const char *str, std::string &text,
 
   text = string(base, ptr-base);
 
-  *endptr = ptr+1;
+  *endptr = ptr + 1;
   return true;
 }

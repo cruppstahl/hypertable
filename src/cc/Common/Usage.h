@@ -27,7 +27,7 @@ namespace Hypertable {
   class Usage {
   public:
     static void dump(const char **usage);
-    static void dump_and_exit(const char **usage, int rcode=1);
+    static void dump_and_exit(const char **usage, int rcode = 1);
   };
 
 }
