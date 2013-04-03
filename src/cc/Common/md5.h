@@ -19,6 +19,12 @@
  * 02110-1301, USA.
  */
 
+/** @file
+ * md5 digest routines.
+ * This file implements the md5 digest algorithm and also has several
+ * helper functions like calculating the md5 of a file or a string.
+ */
+
 #ifndef _MD5_H
 #define _MD5_H
 
@@ -26,23 +32,25 @@
 extern "C" {
 #endif
 
+/** @addtogroup Common
+ *  @{
+ */
+
 /**
  * \brief          MD5 context structure
  */
-typedef struct
-{
-    unsigned long total[2];     /*!< number of bytes processed  */
-    unsigned long state[4];     /*!< intermediate digest state  */
-    unsigned char buffer[64];   /*!< data block being processed */
-}
-md5_context;
+typedef struct {
+  unsigned long total[2];     /*!< number of bytes processed  */
+  unsigned long state[4];     /*!< intermediate digest state  */
+  unsigned char buffer[64];   /*!< data block being processed */
+} md5_context;
 
 /**
  * \brief          MD5 context setup
  *
  * \param ctx      MD5 context to be initialized
  */
-void md5_starts( md5_context *ctx );
+void md5_starts(md5_context *ctx);
 
 /**
  * \brief          MD5 process buffer
@@ -51,7 +59,7 @@ void md5_starts( md5_context *ctx );
  * \param input    buffer holding the  data
  * \param ilen     length of the input data
  */
-void md5_update( md5_context *ctx, const unsigned char *input, int ilen );
+void md5_update(md5_context *ctx, const unsigned char *input, int ilen);
 
 /**
  * \brief          MD5 final digest
@@ -59,7 +67,7 @@ void md5_update( md5_context *ctx, const unsigned char *input, int ilen );
  * \param ctx      MD5 context
  * \param output   MD5 checksum result
  */
-void md5_finish( md5_context *ctx, unsigned char output[16] );
+void md5_finish(md5_context *ctx, unsigned char output[16]);
 
 /**
  * \brief          Output = MD5( input buffer )
@@ -68,8 +76,8 @@ void md5_finish( md5_context *ctx, unsigned char output[16] );
  * \param ilen     length of the input data
  * \param output   MD5 checksum result
  */
-void md5_csum( const unsigned char *input, int ilen,
-               unsigned char output[16] );
+void md5_csum(const unsigned char *input, int ilen,
+              unsigned char output[16]);
 
 /**
  * \brief          Output = MD5( file contents )
@@ -78,7 +86,7 @@ void md5_csum( const unsigned char *input, int ilen,
  * \param output   MD5 checksum result
  * \return         0 if successful, or 1 if fopen failed
  */
-int md5_file( const char *path, unsigned char output[16] );
+int md5_file(const char *path, unsigned char output[16]);
 
 /**
  * \brief          Output = HMAC-MD5( input buffer, hmac key )
@@ -89,16 +97,16 @@ int md5_file( const char *path, unsigned char output[16] );
  * \param ilen     length of the input data
  * \param output   HMAC-MD5 result
  */
-void md5_hmac( unsigned char *key, int keylen,
-               const unsigned char *input, int ilen,
-               unsigned char output[16] );
+void md5_hmac(unsigned char *key, int keylen,
+              const unsigned char *input, int ilen,
+              unsigned char output[16]);
 
 /**
  * \brief          Checkup routine
  *
  * \return         0 if successful, or 1 if the test failed
  */
-int md5_self_test( void );
+int md5_self_test(void);
 
 /**
  * \brief          Get the hex string of MD5 of the input buffer
@@ -134,6 +142,7 @@ int64_t md5_hash(const char *input);
 void md5_trunc_modified_base64(const char *input, char output[17]);
 void digest_to_trunc_modified_base64(const char digest[16], char output[17]);
 
+/** @} */
 
 #ifdef __cplusplus
 }
