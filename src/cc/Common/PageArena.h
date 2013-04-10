@@ -17,6 +17,14 @@
  * along with Hypertable. If not, see <http://www.gnu.org/licenses/>
  */
 
+/** @file
+ * PageArena memory allocator.
+ * This class efficiently allocates memory chunks from large memory pages.
+ * This reduces the number of heap allocations, thus causing less heap
+ * fragmentation and higher performance. The PageArena memory allocator can be
+ * used for STL classes.
+ */
+
 #ifndef HYPERTABLE_PAGEARENA_H
 #define HYPERTABLE_PAGEARENA_H
 
@@ -35,6 +43,11 @@
 
 namespace Hypertable {
 
+/** @addtogroup Common
+ *  @{
+ */
+
+/** A memory allocator using ::malloc() and ::free() */
 struct DefaultPageAllocator {
   void *allocate(size_t sz) { return std::malloc(sz); }
   void deallocate(void *p) { std::free(p); }
@@ -42,9 +55,10 @@ struct DefaultPageAllocator {
 };
 
 /**
- * A simple/fast allocator to avoid individual deletes/frees
- * Good for usage patterns that just:
- * load, use and free the entire container repeatedly.
+ * The PageArena allocator is simple and fast, avoiding individual
+ * mallocs/frees.
+ * Good for usage patterns that just load, use and free the entire container
+ * repeatedly.
  */
 template <typename CharT = char, class PageAllocatorT = DefaultPageAllocator>
 class PageArena : boost::noncopyable {
@@ -62,19 +76,18 @@ class PageArena : boost::noncopyable {
       alloc_end = buf;
     }
 
-    size_t
-    remain() const { return page_end - alloc_end; }
+    size_t remain() const {
+      return page_end - alloc_end;
+    }
 
-    CharT *
-    alloc(size_t sz) {
+    CharT *alloc(size_t sz) {
       assert(sz <= remain());
       char *start = alloc_end;
       alloc_end += sz;
       return (CharT *)start;
     }
 
-    CharT *
-    alloc_down(size_t sz) {
+    CharT *alloc_down(size_t sz) {
       assert(sz <= remain());
       page_end -= sz;
       return (CharT *)page_end;
@@ -83,23 +96,29 @@ class PageArena : boost::noncopyable {
 
  private: // data
   Page *m_cur_page;
-  size_t m_used;        // total number of bytes allocated by users
-  size_t m_page_limit;  // capacity in bytes of an empty page
-  size_t m_page_size;   // page size in number of bytes
-  size_t m_pages;       // number of pages allocated
-  size_t m_total;       // total number of bytes occupied by pages
+  size_t m_used;        /** total number of bytes allocated by users */
+  size_t m_page_limit;  /** capacity in bytes of an empty page */
+  size_t m_page_size;   /** page size in number of bytes */
+  size_t m_pages;       /** number of pages allocated */
+  size_t m_total;       /** total number of bytes occupied by pages */
   PageAllocatorT m_page_allocator;
 
+  /** predicate which sorts by size */
   struct LtPageRemain {
     bool operator()(const Page* p1, const Page*p2) const {
       return p1->remain() < p2->remain();
     }
   };
 
+  /** a list of pages with gaps, sorted by gap size */
   typedef std::set<Page*, LtPageRemain> GappyPages;
   GappyPages m_gappy_pages;
+
   size_t m_gappy_limit;
 
+  /** A small buffer (128 bytes) to satisfy very small memory allocations
+   * without allocating a page from the heap
+   */
   struct TinyBuffer {
     enum { SIZE = 128 };
     CharT base[SIZE];
@@ -117,8 +136,7 @@ class PageArena : boost::noncopyable {
   TinyBuffer m_tinybuf;
 
  private: // helpers
-  Page *
-  alloc_page(size_t sz, bool prepend = true) {
+  Page *alloc_page(size_t sz, bool prepend = true) {
     Page *page = (Page *) m_page_allocator.allocate(sz);
     HT_EXPECT(page, Error::BAD_MEMORY_ALLOCATION);
     new (page) Page((char *)page + sz);
@@ -165,9 +183,14 @@ class PageArena : boost::noncopyable {
     BOOST_STATIC_ASSERT(sizeof(CharT) == 1);
     HT_ASSERT(page_size > sizeof(Page));
   }
-  ~PageArena() { free(); }
 
-  size_t page_size() { return m_page_size; }
+  ~PageArena() {
+    free();
+  }
+
+  size_t page_size() {
+    return m_page_size;
+  }
 
   void set_page_size(size_t sz) {
     HT_ASSERT(sz > sizeof(Page));
@@ -175,8 +198,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** allocate sz bytes */
-  CharT *
-  alloc(size_t sz) {
+  CharT *alloc(size_t sz) {
     CharT *tiny;
     if ((tiny = m_tinybuf.alloc(sz)))
       return tiny;
@@ -193,7 +215,9 @@ class PageArena : boost::noncopyable {
       if (page->remain() >= TinyBuffer::SIZE) {
         m_gappy_pages.insert(page);
       }
-      m_gappy_limit = m_gappy_pages.size() ? (*m_gappy_pages.rbegin())->remain() : 0;
+      m_gappy_limit = m_gappy_pages.size()
+          ? (*m_gappy_pages.rbegin())->remain()
+          : 0;
       return p;
     }
 
@@ -213,8 +237,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** allocate sz bytes */
-  CharT *
-  alloc_down(size_t sz) {
+  CharT *alloc_down(size_t sz) {
     CharT *tiny;
     if ((tiny = m_tinybuf.alloc(sz)))
       return tiny;
@@ -233,8 +256,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** realloc for newsz bytes */
-  CharT *
-  realloc(void *p, size_t oldsz, size_t newsz) {
+  CharT *realloc(void *p, size_t oldsz, size_t newsz) {
     HT_ASSERT(m_cur_page);
     // if we're the last one on the current page with enough space
     if ((char *)p + oldsz == m_cur_page->alloc_end
@@ -248,8 +270,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** duplicate a null terminated string s */
-  CharT *
-  dup(const char *s) {
+  CharT *dup(const char *s) {
     if (HT_UNLIKELY(!s))
       return NULL;
 
@@ -260,8 +281,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** duplicate a buffer of size len */
-  CharT *
-  dup(const void *s, size_t len) {
+  CharT *dup(const void *s, size_t len) {
     if (HT_UNLIKELY(!s))
       return NULL;
 
@@ -272,8 +292,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** free the whole arena */
-  void
-  free() {
+  void free() {
     Page *page;
 
     while (m_cur_page) {
@@ -290,8 +309,7 @@ class PageArena : boost::noncopyable {
   }
 
   /** swap with another allocator efficiently */
-  void
-  swap(Self &x) {
+  void swap(Self &x) {
     std::swap(m_cur_page, x.m_cur_page);
     std::swap(m_page_limit, x.m_page_limit);
     std::swap(m_page_size, x.m_page_size);
@@ -304,13 +322,9 @@ class PageArena : boost::noncopyable {
   }
 
   /** dump some allocator stats */
-  std::ostream&
-  dump_stat(std::ostream& out) const {
-    out <<"pages="<< m_pages
-      <<", total="<< m_total
-      <<", used="<< m_used
-      <<"("<< m_used * 100. / m_total
-      <<"%)";
+  std::ostream& dump_stat(std::ostream& out) const {
+    out << "pages=" << m_pages << ", total=" << m_total << ", used=" << m_used
+        << "(" << m_used * 100. / m_total << "%)";
     return out;
   }
 

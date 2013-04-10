@@ -23,6 +23,8 @@
  * md5 digest routines.
  * This file implements the md5 digest algorithm and also has several
  * helper functions like calculating the md5 of a file or a string.
+ * The MD5 algorithm was designed by Ron Rivest in 1991
+ * (http://www.ietf.org/rfc/rfc1321.txt).
  */
 
 #ifndef _MD5_H
@@ -36,8 +38,8 @@ extern "C" {
  *  @{
  */
 
-/**
- * \brief          MD5 context structure
+/** MD5 context structure; this structure is used to store the internal state
+ * of the md5 algorithm.
  */
 typedef struct {
   unsigned long total[2];     /*!< number of bytes processed  */
@@ -45,101 +47,100 @@ typedef struct {
   unsigned char buffer[64];   /*!< data block being processed */
 } md5_context;
 
-/**
- * \brief          MD5 context setup
+/** Initialize and setup a MD5 context structure
  *
- * \param ctx      MD5 context to be initialized
+ * @param ctx MD5 context to be initialized
  */
 void md5_starts(md5_context *ctx);
 
-/**
- * \brief          MD5 process buffer
+/** Adds data to the MD5 process buffer
  *
- * \param ctx      MD5 context
- * \param input    buffer holding the  data
- * \param ilen     length of the input data
+ * @param ctx      MD5 context
+ * @param input    buffer holding the data
+ * @param ilen     length of the input data
  */
 void md5_update(md5_context *ctx, const unsigned char *input, int ilen);
 
-/**
- * \brief          MD5 final digest
+/** Retrieve the final MD5 digest
  *
- * \param ctx      MD5 context
- * \param output   MD5 checksum result
+ * @param ctx      MD5 context
+ * @param output   MD5 checksum result
  */
 void md5_finish(md5_context *ctx, unsigned char output[16]);
 
-/**
- * \brief          Output = MD5( input buffer )
+/** Convenience function to calculate the MD5 sum of an input buffer
  *
- * \param input    buffer holding the  data
- * \param ilen     length of the input data
- * \param output   MD5 checksum result
+ * @param input    buffer holding the  data
+ * @param ilen     length of the input data
+ * @param output   MD5 checksum result
  */
-void md5_csum(const unsigned char *input, int ilen,
-              unsigned char output[16]);
+void md5_csum(const unsigned char *input, int ilen, unsigned char output[16]);
 
-/**
- * \brief          Output = MD5( file contents )
+/** Convenience function to calculate the MD5 sum of a file
  *
- * \param path     input file name
- * \param output   MD5 checksum result
- * \return         0 if successful, or 1 if fopen failed
+ * @param path     input file name
+ * @param output   MD5 checksum result
+ * @return         0 if successful, or 1 if fopen failed
  */
 int md5_file(const char *path, unsigned char output[16]);
 
-/**
- * \brief          Output = HMAC-MD5( input buffer, hmac key )
+/** Calculates a "Hashed MAC" of an input buffer combined with a secret key
  *
- * \param key      HMAC secret key
- * \param keylen   length of the HMAC key
- * \param input    buffer holding the  data
- * \param ilen     length of the input data
- * \param output   HMAC-MD5 result
+ * @param key      HMAC secret key
+ * @param keylen   length of the HMAC key
+ * @param input    buffer holding the  data
+ * @param ilen     length of the input data
+ * @param output   HMAC-MD5 result
  */
 void md5_hmac(unsigned char *key, int keylen,
               const unsigned char *input, int ilen,
               unsigned char output[16]);
 
-/**
- * \brief          Checkup routine
+/** Runs a self test.
  *
- * \return         0 if successful, or 1 if the test failed
+ * @return         0 if successful, or 1 if the test failed
  */
 int md5_self_test(void);
 
-/**
- * \brief          Get the hex string of MD5 of the input buffer
+/** Convenience function to calculate the MD5 sum of an input buffer;
+ * returns string with the MD5 encoded in hexadecimal 
  *
- * \param input    input string
- * \param ilen     length of the input data
- * \param output   Hex string representation of MD5 checksum
+ * @param input    input string
+ * @param ilen     length of the input data
+ * @param output   Hex string representation of MD5 checksum
  */
 void md5_hex(const void *input, size_t ilen, char output[33]);
 
-/**
- * \brief          Get the hex string of MD5 of null terminated input
+/** Calculates the hex string of MD5 of null terminated input
  *
- * \param input    input string
- * \param output   Hex string representation of MD5 checksum
+ * @param input    input string
+ * @param output   Hex string representation of MD5 checksum
  */
 void md5_string(const char *input, char output[33]);
 
-/**
- * \brief          Returns 64-bit hash checksum
+/** Returns a 64-bit hash checksum of a null terminated input buffer
  *
- * \param input    input string
+ * @param input    input string
  */
 int64_t md5_hash(const char *input);
 
-/**
- * \brief          Get the modified base64 encoded string of the first 12 Bytes of the 16 Byte
- *                 MD5 code of a null terminated output
- *                 http://en.wikipedia.org/wiki/Base64#URL_applications
- * \param input    input string
- * \param output   Hex string representation of MD5 checksum
+/** Get the modified base64 encoded string of the first 12 Bytes of the 16 Byte
+ * MD5 code of a null terminated output;
+ * see http://en.wikipedia.org/wiki/Base64#URL_applications for more
+ * information
+ *
+ * @param input    input string
+ * @param output   Hex string representation of MD5 checksum
  */
 void md5_trunc_modified_base64(const char *input, char output[17]);
+
+/** Get the modified base64 encoded string of a 16 byte message digest
+ * see http://en.wikipedia.org/wiki/Base64#URL_applications for more
+ * information
+ *
+ * @param input    input buffer
+ * @param output   Hex string representation of MD5 checksum
+ */
 void digest_to_trunc_modified_base64(const char digest[16], char output[17]);
 
 /** @} */
