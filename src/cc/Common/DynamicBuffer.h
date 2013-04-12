@@ -1,4 +1,4 @@
-/** -*- c++ -*-
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -50,8 +50,8 @@ namespace Hypertable {
      * Constructor
      *
      * @param initial_size Initial size of the buffer
-     * @own_buffer If true, then this object takes ownership of the buffer
-     *      and releases it when going out of scope
+     * @param own_buffer If true, then this object takes ownership of the
+     *      buffer and releases it when going out of scope
      */
     explicit DynamicBuffer(size_t initial_size = 0, bool own_buffer = true)
         : size(initial_size), own(own_buffer) {

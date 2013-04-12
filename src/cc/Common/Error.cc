@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -20,7 +20,8 @@
  */
 
 /** @file
- * Error codes, Exception handling, error logging
+ * Error codes, Exception handling, error logging.
+ *
  * This file contains all error codes used in Hypertable, the Exception
  * base class and macros for logging and error handling.
  */

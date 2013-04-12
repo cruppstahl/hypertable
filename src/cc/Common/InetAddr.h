@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -84,7 +84,7 @@ namespace Hypertable {
 
     /** Constructor creates an internet address from a 32bit IP address
      *
-     * @param ip The 32bit IP address
+     * @param ip32 The 32bit IP address
      * @param port The port of the remote service
      * @throws Error::BAD_DOMAIN_NAME if the host cannot be resolved
      */
@@ -156,7 +156,7 @@ namespace Hypertable {
     /** Initialize addr from an endpoint string (host:port)
      *
      * @param addr The sockaddr_in structure (or a pointer to an InetAddr)
-     * @param addr_string The remote address
+     * @param addr_str A string with the remote address
      * @return true on success, otherwise false
      */
     static bool initialize(sockaddr_in *addr, const char *addr_str);

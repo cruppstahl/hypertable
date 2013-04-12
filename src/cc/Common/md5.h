@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -129,8 +129,8 @@ int64_t md5_hash(const char *input);
  * see http://en.wikipedia.org/wiki/Base64#URL_applications for more
  * information
  *
- * @param input    input string
- * @param output   Hex string representation of MD5 checksum
+ * @param input  Pointer to the input string
+ * @param output Hex string representation of MD5 checksum
  */
 void md5_trunc_modified_base64(const char *input, char output[17]);
 
@@ -138,8 +138,8 @@ void md5_trunc_modified_base64(const char *input, char output[17]);
  * see http://en.wikipedia.org/wiki/Base64#URL_applications for more
  * information
  *
- * @param input    input buffer
- * @param output   Hex string representation of MD5 checksum
+ * @param digest The 16 byte input buffer
+ * @param output Hex string representation of MD5 checksum
  */
 void digest_to_trunc_modified_base64(const char digest[16], char output[17]);
 

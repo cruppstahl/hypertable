@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -17,6 +17,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
+ */
+
+/** @file
+ * Program options handling.
+ * Based on boost::program_options, the options are configured in Config.h.
  */
 
 #include "Common/Compat.h"
@@ -189,14 +194,6 @@ Properties::parse_args(const std::vector<String> &args,
   HT_TRY("parsing arguments",
     command_line_parser parser(args);
     parse(parser, desc, m_map, hidden, p, allow_unregistered));
-}
-
-
-// As of boost 1.38, notify will segfault if anything is added to
-// the variables_map by means other than store, which is too limiting.
-// So don't call notify after add/setting properties manually or die
-void Properties::notify() {
-  boost::program_options::notify(m_map);
 }
 
 

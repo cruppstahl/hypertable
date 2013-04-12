@@ -50,6 +50,7 @@ void FragmentData::merge(RangePtr &range, const char *split_point,
     size_t decode_remain = event->payload_len;
     location = Serialization::decode_vstr(&decode_ptr, &decode_remain);
     plan_generation = Serialization::decode_i32(&decode_ptr, &decode_remain);
+    (void)plan_generation; // avoid g++ warning about unused variable
     range_spec.decode(&decode_ptr, &decode_remain);
     // skip "fragment"
     (void)Serialization::decode_i32(&decode_ptr, &decode_remain);

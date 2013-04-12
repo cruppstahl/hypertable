@@ -1,4 +1,4 @@
-/** -*- C++ -*-
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -18,7 +18,8 @@
  */
 
 /** @file
- * Initialization helper for applications
+ * Initialization helper for applications.
+ *
  * The initialization routines help setting up application boilerplate,
  * configuration policies and usage strings.
  */

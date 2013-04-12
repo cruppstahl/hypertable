@@ -1,4 +1,4 @@
-//-----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // MurmurHash2, by Austin Appleby
 // (public domain, cf. http://murmurhash.googlepages.com/)
 
@@ -22,6 +22,7 @@
  */
 
 #include "Common/Compat.h"
+#include "Common/MurmurHash.h"
 
 namespace Hypertable {
 

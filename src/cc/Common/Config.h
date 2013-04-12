@@ -1,4 +1,4 @@
-/** -*- C++ -*-
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -117,7 +117,7 @@ namespace Hypertable { namespace Config {
 
   /** Get the command line hidden options description (for positional options)
    *
-   * @param desc Reference to the Description object
+   * @return desc Reference to the Description object
    */
   Desc &cmdline_hidden_desc();
 

@@ -1,4 +1,4 @@
-/** -*- c++ -*-
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -82,7 +82,7 @@ namespace Hypertable {
      * internal structure. There can be multiple calls to parse_options,
      * and multiple failure inducer specs can be concatenated by ';'.
      *
-     * @param option The option specs
+     * @param spec The spec string
      */
     void parse_option(String spec);
 
@@ -104,10 +104,15 @@ namespace Hypertable {
 
     /** Internal structure to store a single failure setting */
     struct failure_inducer_state {
+      /** Current iteration of the failure */
       uint32_t iteration;
+      /** Number of iterations after which the failure is triggered */
       uint32_t trigger_iteration;
+      /** The failure type; an enum in FailureInducer.cc */
       int failure_type;
+      /** The error code which is thrown (if @a type is FAILURE_TYPE_THROW) */
       int error_code;
+      /** Milliseconds to pause (if @a type is FAILURE_TYPE_PAUSE) */
       int pause_millis;
     };
 

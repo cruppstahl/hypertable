@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -79,7 +79,7 @@ public:
    * are stored in that buffer
    *
    * @param buf Pointer to the memory buffer
-   * @len Size of that buffer, in bytes
+   * @param len Size of that buffer, in bytes
    */
   FixedOstream(char *buf, size_t len)
     : FixedStreamBuf(buf, len), std::ostream(static_cast<StreamBuf *>(this)) {

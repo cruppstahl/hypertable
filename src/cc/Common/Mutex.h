@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -47,7 +47,7 @@ namespace Hypertable {
 template <class MutexT>
 class Locker : boost::noncopyable {
 public:
-  /** Constructor; acquires the lock, unless @ref init_lock is false */
+  /** Constructor; acquires the lock, unless @a init_lock is false */
   explicit Locker(MutexT &mutex, bool init_lock = true)
     : m_mutex(mutex), m_locked(false) {
     if (init_lock)

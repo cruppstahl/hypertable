@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -102,7 +102,7 @@ namespace Hypertable {
      *
      * @param fd Open file handle
      * @param vector An iovec array holding pointers to the data
-     * @param count Number of iovec structures in @ref vector
+     * @param count Number of iovec structures in @a vector
      * @return Total number of bytes written, or -1 on error
      */
     static ssize_t writev(int fd, const struct iovec *vector, int count);

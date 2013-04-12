@@ -1,4 +1,4 @@
-/** -*- c++ -*-
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -37,6 +37,9 @@ namespace Hypertable {
    *  @{
    */
 
+  /**
+   * The Flyweight string set stores duplicate strings efficiently.
+   */
   class FlyweightString {
   public:
     /** The destructor deletes all internal pointers and clears the set;

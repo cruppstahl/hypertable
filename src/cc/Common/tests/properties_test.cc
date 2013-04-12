@@ -44,14 +44,9 @@ void basic_test(const PropertiesDesc &desc) {
   Properties props;
   props.parse_args(sizeof(argv)/sizeof(char *), (char **)argv, desc);
   props.parse_args(args, desc);
-  props.notify();
   props.set("mode", MODE_FOO);
   cout <<"mode="<< props.get<Mode>("mode") << endl;
   props.print(cout);
-}
-
-void notify(const String &s) {
-  cout << __func__ <<": "<< s << endl;
 }
 
 }
@@ -63,7 +58,6 @@ int main(int argc, char *argv[]) {
     desc.add_options()
       ("help,h", "help")
       ("boo", boo()->zero_tokens()->default_value(true), "a boolean arg")
-      ("string", str()->notifier(notify), "a string arg")
       ("strs", strs(), "a list of strings")
       ("i16", i16(), "a 16-bit integer arg")
       ("i32", i32(), "a 32-bit integer arg")
@@ -74,7 +68,6 @@ int main(int argc, char *argv[]) {
       ;
     Properties props;
     props.parse_args(argc, argv, desc);
-    props.notify();
 
     if (props.has("help"))
       cout << desc << endl;

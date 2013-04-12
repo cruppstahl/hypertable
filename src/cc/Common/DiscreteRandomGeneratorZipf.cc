@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -20,8 +20,8 @@
  */
 
 /** @file
- * Discrete Random Generator creating a zipfian distribution
- * see http://en.wikipedia.org/wiki/Zipf%27s_law
+ * Discrete Random Generator creating a zipfian distribution.
+ * See http://en.wikipedia.org/wiki/Zipf%27s_law
  */
 
 #include "DiscreteRandomGeneratorZipf.h"

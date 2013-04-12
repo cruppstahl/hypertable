@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -95,7 +95,7 @@ private:
    * @param key The inserted key of the object
    * @param rv The InsRet pair, which is the result of the actual insert
    *        operation.
-   * @return A copy of the @ref rv parameter is returned.
+   * @return A copy of the @a rv parameter is returned.
    */
   InsRet insert_key(const char *key, InsRet rv) {
     if (rv.second) {

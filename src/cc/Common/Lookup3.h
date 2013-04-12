@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (C) 2007-2012 Hypertable, Inc.
  *
  * This file is part of Hypertable.
@@ -35,6 +35,9 @@ namespace Hypertable {
  *  @{
  */
 
+/** 
+ * The Lookup3 hash algorithm, a fast and strong 32bit hash.
+ */
 class Lookup3 {
   public:
     /** Returns the hash of a String
