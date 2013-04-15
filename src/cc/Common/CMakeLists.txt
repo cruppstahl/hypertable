@@ -46,7 +46,6 @@ System.cc
 SystemInfo.cc
 StatsSerializable.cc
 StatsSystem.cc
-StringCompressorPrefix.cc
 StringDecompressorPrefix.cc
 Time.cc
 Usage.cc

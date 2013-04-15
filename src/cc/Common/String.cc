@@ -17,6 +17,10 @@
  * along with Hypertable. If not, see <http://www.gnu.org/licenses/>
  */
 
+/** @file
+ * A String class based on std::string.
+ */
+
 #include "Compat.h"
 #include <cstdarg>
 #include <cstdio>
