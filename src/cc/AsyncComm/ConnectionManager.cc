@@ -354,6 +354,7 @@ ConnectionManager::handle(EventPtr &event) {
   }
 
   if (conn_state) {
+    bool dont_forward = false;
     ScopedLock conn_lock(conn_state->mutex);
 
     if (event->type == Event::CONNECTION_ESTABLISHED) {
@@ -362,8 +363,11 @@ ConnectionManager::handle(EventPtr &event) {
         int error = m_impl->comm->send_request(event->addr, 60000, cbuf, this);
         if (error == Error::COMM_BROKEN_CONNECTION ||
             error == Error::COMM_NOT_CONNECTED ||
-            error == Error::COMM_INVALID_PROXY)
+            error == Error::COMM_INVALID_PROXY) {
+          HT_INFOF("Received error %d", error);
           set_retry_state(conn_state, event);
+          dont_forward = true;
+        }
         else if (error != Error::OK)
           HT_FATALF("Problem initializing connection to %s - %s", 
                     conn_state->service_name.c_str(), Error::get_text(error));
@@ -403,7 +407,7 @@ ConnectionManager::handle(EventPtr &event) {
     }
 
     // Chain event to application supplied handler
-    if (conn_state->handler)
+    if (dont_forward == false && conn_state->handler)
       conn_state->handler->handle(event);
   }
   else {
